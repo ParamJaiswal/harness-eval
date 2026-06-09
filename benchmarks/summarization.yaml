@@ -1,0 +1,69 @@
+name: "Summarization"
+description: "Tests the ability to produce accurate, concise, and faithful summaries of provided texts across different domains and lengths."
+category: "llm"
+version: "1.0"
+
+tasks:
+  - id: "summ_news_001"
+    type: "llm_task"
+    prompt: "Summarize the following news article in 2-3 sentences:\n\nThe European Central Bank announced on Thursday that it would raise interest rates by 25 basis points, bringing the main refinancing rate to 4.50%. The decision, which was widely anticipated by financial markets, marks the tenth consecutive rate hike since July 2022. ECB President Christine Lagarde stated that inflation remains 'too high for too long' and that the bank is committed to bringing it back to the 2% target. However, she acknowledged that the eurozone economy is showing signs of weakening, with revised GDP growth forecasts lowered to 0.7% for the year. The rate hike has drawn criticism from several member states, particularly in southern Europe, where higher borrowing costs are putting pressure on already-strained public finances and mortgage holders."
+    expected_output: "ECB raised interest rates by 25 basis points to 4.50%, marking its tenth consecutive hike since July 2022 to combat persistent inflation. President Lagarde emphasized commitment to the 2% inflation target despite acknowledging a weakening eurozone economy with lowered GDP growth forecasts."
+    scoring: "llm_judge"
+    difficulty: "easy"
+    tags: ["summarization", "news", "finance"]
+
+  - id: "summ_science_001"
+    type: "llm_task"
+    prompt: "Summarize the following scientific passage in 2-3 sentences:\n\nCRISPR-Cas9 is a revolutionary gene-editing technology derived from a natural defense mechanism found in bacteria. Bacteria use CRISPR sequences as a form of immune memory, storing fragments of viral DNA to recognize and destroy matching sequences in future infections. Scientists Jennifer Doudna and Emmanuelle Charpentier demonstrated in 2012 that this system could be reprogrammed to cut any DNA sequence by designing a synthetic guide RNA. The technology has since been adapted for use in human cells, agricultural applications, and therapeutic research. Clinical trials are underway for CRISPR-based treatments for sickle cell disease, beta-thalassemia, and certain cancers. However, ethical concerns remain, particularly regarding germline editing — changes that would be inherited by future generations. The 2018 case of He Jiankui, who created the first gene-edited babies in China, highlighted the urgent need for international regulatory frameworks."
+    expected_output: "CRISPR-Cas9 is a gene-editing technology adapted from bacterial immune systems, enabling precise DNA cutting using synthetic guide RNA. While it holds therapeutic promise for diseases like sickle cell disease, ethical concerns about germline editing and the need for international regulation persist."
+    scoring: "llm_judge"
+    difficulty: "medium"
+    tags: ["summarization", "science", "biology"]
+
+  - id: "summ_legal_001"
+    type: "llm_task"
+    prompt: "Summarize the following legal text in 2-3 sentences:\n\nSection 230 of the Communications Decency Act of 1996 provides that 'No provider or user of an interactive computer service shall be treated as the publisher or speaker of any information provided by another information content provider.' This provision has been interpreted by courts to grant broad immunity to online platforms — including social media companies, forums, and review sites — from liability for content posted by their users. The law also contains a 'Good Samaritan' clause that allows platforms to moderate content in good faith without losing their immunity. Critics argue that Section 230 enables platforms to avoid accountability for hosting harmful content, including misinformation and hate speech. Proponents counter that without this protection, the modern internet as we know it could not exist, as platforms would be forced to pre-screen every piece of user-generated content or avoid hosting it altogether."
+    expected_output: "Section 230 of the Communications Decency Act grants online platforms immunity from liability for user-generated content while allowing good-faith content moderation. The law is debated between critics who say it enables harmful content and proponents who argue it is essential for the modern internet's existence."
+    scoring: "llm_judge"
+    difficulty: "medium"
+    tags: ["summarization", "legal", "technology-law"]
+
+  - id: "summ_technical_001"
+    type: "llm_task"
+    prompt: "Summarize the following technical passage in 2-3 sentences:\n\nTransformer models, introduced in the 2017 paper 'Attention Is All You Need' by Vaswani et al., replaced recurrent architectures with a self-attention mechanism that processes all positions in a sequence simultaneously. This parallelization dramatically reduced training times and enabled scaling to billions of parameters. The architecture consists of an encoder-decoder structure, though many modern variants use only the encoder (BERT) or only the decoder (GPT). Pre-training on massive text corpora followed by task-specific fine-tuning has become the dominant paradigm in natural language processing. Key innovations include multi-head attention, which allows the model to attend to information from different representation subspaces, and positional encodings, which inject sequence order information that the attention mechanism alone cannot capture. The Transformer architecture now underpins virtually all state-of-the-art language models, including GPT-4, Claude, Gemini, and LLaMA."
+    expected_output: "Transformers replaced recurrent architectures with parallel self-attention mechanisms, enabling massive scaling and faster training. The architecture's encoder-decoder structure, combined with pre-training and fine-tuning, now underpins all major language models."
+    scoring: "llm_judge"
+    difficulty: "medium"
+    tags: ["summarization", "technical", "machine-learning"]
+
+  - id: "summ_historical_001"
+    type: "llm_task"
+    prompt: "Summarize the following historical passage in 2-3 sentences:\n\nThe Manhattan Project was a secret research program initiated in 1942 during World War II, tasked with developing the first nuclear weapons. Led by physicist J. Robert Oppenheimer and overseen by General Leslie Groves, the project employed over 125,000 people across more than 30 sites in the United States, United Kingdom, and Canada. The total cost exceeded $2 billion (approximately $28 billion in today's dollars). The project's primary facilities were located at Los Alamos, New Mexico; Oak Ridge, Tennessee; and Hanford, Washington. On July 16, 1945, the first nuclear device was successfully detonated in the Trinity test in New Mexico. Less than a month later, atomic bombs were dropped on the Japanese cities of Hiroshima and Nagasaki, leading to Japan's surrender and the end of World War II. The project fundamentally altered geopolitics and initiated the nuclear arms race of the Cold War era."
+    expected_output: "The Manhattan Project was a massive WWII secret program that developed the first nuclear weapons, employing over 125,000 people at a cost exceeding $2 billion. Its success led to the bombings of Hiroshima and Nagasaki, ending the war but initiating the nuclear arms race."
+    scoring: "llm_judge"
+    difficulty: "easy"
+    tags: ["summarization", "history", "military"]
+
+  - id: "summ_business_001"
+    type: "llm_task"
+    prompt: "Summarize the following business report in 2-3 sentences:\n\nTesla's Q3 2024 earnings report revealed revenue of $25.18 billion, a 7.8% increase year-over-year but slightly below analyst expectations of $25.37 billion. Vehicle deliveries reached 462,890 units, driven primarily by strong Model Y demand in China and Europe. However, gross margins compressed to 17.9% from 19.7% in the same quarter last year, reflecting aggressive price cuts implemented throughout 2023 and 2024 to maintain market share against growing competition from Chinese EV manufacturers like BYD and NIO. The energy storage division was a bright spot, with deployments of 6.9 GWh — a record quarter — generating $2.38 billion in revenue. CEO Elon Musk reiterated the company's commitment to launching a more affordable vehicle under $30,000 by mid-2025 and stated that Full Self-Driving technology would achieve 'unsupervised autonomy' before the end of 2025."
+    expected_output: "Tesla reported Q3 2024 revenue of $25.18 billion with 462,890 vehicle deliveries, though gross margins declined due to competitive price cuts. The energy storage division set records while the company plans a sub-$30,000 vehicle and advances in autonomous driving."
+    scoring: "llm_judge"
+    difficulty: "medium"
+    tags: ["summarization", "business", "earnings"]
+
+  - id: "summ_longform_001"
+    type: "llm_task"
+    prompt: "Summarize the following passage in exactly one sentence:\n\nThe human gut microbiome consists of trillions of microorganisms, including bacteria, viruses, fungi, and archaea, that collectively encode over 3 million genes — roughly 150 times more than the human genome. This complex ecosystem plays crucial roles in digestion, immune system development, vitamin synthesis, and protection against pathogens. Recent research has established connections between gut microbiome composition and conditions as diverse as obesity, type 2 diabetes, inflammatory bowel disease, depression, and even Parkinson's disease. The composition of the microbiome is influenced by diet, antibiotics, geography, age, and mode of birth delivery. Emerging therapeutic approaches include fecal microbiota transplantation (FMT), which has shown remarkable success rates exceeding 90% for recurrent Clostridium difficile infections, as well as precision probiotics engineered to produce specific therapeutic molecules."
+    expected_output: "The human gut microbiome is a complex ecosystem of trillions of microorganisms that influences diverse health conditions, with emerging therapies like fecal transplants showing remarkable treatment potential."
+    scoring: "llm_judge"
+    difficulty: "hard"
+    tags: ["summarization", "science", "microbiome"]
+
+  - id: "summ_comparative_001"
+    type: "llm_task"
+    prompt: "Summarize the key differences described in the following passage in 2-3 sentences:\n\nSQL and NoSQL databases represent fundamentally different approaches to data storage. SQL databases like PostgreSQL and MySQL use structured schemas with predefined tables and relationships, enforce ACID properties (Atomicity, Consistency, Isolation, Durability), and use the SQL query language. They excel at complex queries involving joins across multiple tables and are ideal for transactional systems like banking and inventory management. NoSQL databases like MongoDB, Cassandra, and Redis sacrifice some ACID guarantees in favor of horizontal scalability, flexible schemas, and high throughput for specific access patterns. Document stores (MongoDB) handle semi-structured JSON data, key-value stores (Redis) provide sub-millisecond lookups, wide-column stores (Cassandra) handle massive write volumes, and graph databases (Neo4j) excel at relationship-heavy data. The choice between SQL and NoSQL depends on data structure predictability, consistency requirements, scale needs, and query complexity."
+    expected_output: "SQL databases use structured schemas with ACID guarantees and excel at complex relational queries, while NoSQL databases offer flexible schemas and horizontal scalability at the cost of some consistency guarantees. The choice depends on data structure predictability, consistency needs, scale requirements, and query patterns."
+    scoring: "llm_judge"
+    difficulty: "hard"
+    tags: ["summarization", "technical", "databases"]

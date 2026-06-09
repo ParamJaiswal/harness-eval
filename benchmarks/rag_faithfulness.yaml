@@ -1,0 +1,115 @@
+name: "RAG Faithfulness"
+description: "Tests whether RAG pipelines generate faithful, grounded answers without hallucination. Each task provides ground-truth contexts and verifies that the generated answer is strictly supported by the provided passages."
+category: "rag"
+version: "1.0"
+
+tasks:
+  - id: "rag_faith_001"
+    type: "rag_task"
+    prompt: "What is the maximum dosage of Metformin recommended for adult patients with type 2 diabetes?"
+    ground_truth_contexts:
+      - "Metformin hydrochloride is an oral antidiabetic drug used in the management of type 2 diabetes. The recommended starting dose for adults is 500 mg twice daily or 850 mg once daily, given with meals. Dosage may be increased in increments of 500 mg weekly or 850 mg every 2 weeks. The maximum recommended daily dose is 2,550 mg for adults. In clinical trials, there was no additional benefit observed at doses exceeding 2,000 mg per day."
+      - "For elderly patients (over 80 years) or those with renal impairment (eGFR 30-45 mL/min), the maximum daily dose should not exceed 1,000 mg. Metformin is contraindicated in patients with eGFR below 30 mL/min."
+    ground_truth_answer: "The maximum recommended daily dose of Metformin for adult patients with type 2 diabetes is 2,550 mg."
+    scoring: "llm_judge"
+    difficulty: "easy"
+    tags: ["faithfulness", "medical", "dosage"]
+
+  - id: "rag_faith_002"
+    type: "rag_task"
+    prompt: "What were the key findings of the Henderson et al. 2023 study on remote work productivity?"
+    ground_truth_contexts:
+      - "Henderson, Park, and Liu (2023) conducted a longitudinal study of 4,200 knowledge workers across 12 companies over an 18-month period (January 2021 — June 2022). The study measured productivity using output-per-hour metrics, code commits, document completion rates, and manager evaluations. Key findings: (1) Fully remote workers showed a 4.2% decrease in measurable output compared to in-office peers, (2) hybrid workers (2-3 days in office) showed a 1.8% increase in output, (3) remote workers reported 23% higher job satisfaction, and (4) remote workers had 35% lower voluntary attrition rates."
+      - "The study controlled for industry, role type, tenure, and pre-pandemic performance levels. Notably, the productivity differences narrowed over time — by the final quarter, fully remote workers' output gap had decreased to 1.1%. The authors hypothesized that organizational adaptation and improved remote tooling contributed to this convergence."
+    ground_truth_answer: "The Henderson et al. 2023 study found that fully remote workers had a 4.2% decrease in measurable output (narrowing to 1.1% by the final quarter), hybrid workers showed a 1.8% increase, and remote workers had 23% higher job satisfaction and 35% lower attrition rates."
+    scoring: "llm_judge"
+    difficulty: "medium"
+    tags: ["faithfulness", "research", "workplace"]
+
+  - id: "rag_faith_003"
+    type: "rag_task"
+    prompt: "What are the eligibility requirements for the TechForward Grant Program?"
+    ground_truth_contexts:
+      - "The TechForward Grant Program provides funding of up to $250,000 for early-stage technology startups. Eligibility requirements: (1) The company must be incorporated in the United States for no more than 3 years at the time of application, (2) Annual revenue must not exceed $1 million, (3) The founding team must include at least one member with a technical background (CS, engineering, or equivalent experience), (4) The proposed project must address a defined societal challenge in healthcare, education, or environmental sustainability."
+      - "Applications are reviewed on a rolling basis with quarterly deadlines (March 31, June 30, September 30, December 31). The review process takes approximately 8-12 weeks. Selected companies receive funding in two tranches: 60% upon selection and 40% upon completion of agreed-upon milestones. The program explicitly excludes companies that have previously received venture capital funding exceeding $500,000."
+    ground_truth_answer: "TechForward Grant eligibility requires: US incorporation within 3 years, annual revenue under $1 million, at least one technical founder, a project addressing healthcare/education/environmental sustainability, and no prior VC funding exceeding $500,000."
+    scoring: "llm_judge"
+    difficulty: "medium"
+    tags: ["faithfulness", "grants", "eligibility"]
+
+  - id: "rag_faith_004"
+    type: "rag_task"
+    prompt: "What is the refund policy for CloudServe Enterprise subscriptions?"
+    ground_truth_contexts:
+      - "CloudServe Enterprise Subscription Terms of Service (v4.2, effective January 1, 2024): Section 7.3 — Refund Policy. Enterprise customers on annual plans may request a full refund within the first 30 days of their subscription ('Evaluation Period'). After the Evaluation Period, no refunds are available for the current billing cycle. Customers who cancel mid-cycle retain access until the end of their paid period."
+      - "Section 7.4 — Exceptions. Refunds outside the Evaluation Period may be granted in the following cases: (a) documented service outages exceeding 99.9% SLA for three or more consecutive months, prorated to the affected period; (b) material changes to the service that substantially reduce functionality, as determined by CloudServe's review board. Refund requests must be submitted via the Enterprise Support Portal within 15 business days of the qualifying event."
+    ground_truth_answer: "CloudServe Enterprise offers full refunds within the first 30-day Evaluation Period. After that, no refunds are available except for SLA violations exceeding 99.9% uptime for 3+ consecutive months or material service changes. Requests must be filed within 15 business days via the Enterprise Support Portal."
+    scoring: "llm_judge"
+    difficulty: "medium"
+    tags: ["faithfulness", "policy", "saas"]
+
+  - id: "rag_faith_005"
+    type: "rag_task"
+    prompt: "How does the new XR-7 processor compare to its predecessor, the XR-6, in terms of performance?"
+    ground_truth_contexts:
+      - "TechBench Review: XR-7 Processor (Published March 2024). The XR-7 uses a 3nm process node (down from 5nm in the XR-6), featuring 12 performance cores and 8 efficiency cores (XR-6 had 8+4). Single-core Geekbench 6 score: 3,240 (XR-6: 2,680), representing a 20.9% improvement. Multi-core score: 18,450 (XR-6: 14,200), a 29.9% improvement."
+      - "Power efficiency improved significantly: the XR-7 achieves its peak multi-core performance at 95W TDP, compared to 125W for the XR-6. In sustained workloads (Cinebench R24, 30-minute run), the XR-7 maintained 94% of peak performance vs. 87% for the XR-6 due to improved thermal management. The integrated GPU also saw a 45% improvement in ray-tracing performance. Pricing: XR-7 launches at $549 MSRP, compared to the XR-6's launch price of $499."
+    ground_truth_answer: "The XR-7 (3nm) outperforms the XR-6 (5nm) with a 20.9% single-core and 29.9% multi-core improvement, better power efficiency (95W vs 125W TDP), 94% sustained performance under thermal load, and 45% better ray-tracing. It launches at $549 vs the XR-6's $499."
+    scoring: "llm_judge"
+    difficulty: "medium"
+    tags: ["faithfulness", "technology", "comparison"]
+
+  - id: "rag_faith_006"
+    type: "rag_task"
+    prompt: "What are the safety precautions for handling lithium-ion batteries in industrial settings?"
+    ground_truth_contexts:
+      - "OSHA Technical Bulletin 2023-14: Lithium-Ion Battery Safety in Industrial Settings. Required precautions: (1) Store batteries in fireproof cabinets rated for Class B fires at temperatures between 50°F and 80°F (10°C to 27°C), (2) Never charge batteries unattended, (3) Use only manufacturer-approved chargers, (4) Inspect batteries before each use for swelling, damage, or discoloration, (5) Maintain a minimum 3-foot clearance from flammable materials."
+      - "Emergency procedures: In case of thermal runaway, evacuate the area immediately and use a Class D fire extinguisher or dry sand — never use water. Facilities must have a documented battery incident response plan and conduct drills quarterly. Workers handling lithium-ion batteries must complete an 8-hour safety training course annually. PPE requirements include chemical-resistant gloves, safety goggles, and fire-resistant aprons."
+    ground_truth_answer: "Key precautions include storing in fireproof cabinets at 50-80°F, using manufacturer-approved chargers, inspecting for damage before use, maintaining 3-foot clearance from flammables, never charging unattended, and using Class D extinguishers for thermal runaway. Workers need annual 8-hour safety training and specific PPE."
+    scoring: "llm_judge"
+    difficulty: "easy"
+    tags: ["faithfulness", "safety", "industrial"]
+
+  - id: "rag_faith_007"
+    type: "rag_task"
+    prompt: "What is the migration path from MegaDB version 4.x to version 5.0?"
+    ground_truth_contexts:
+      - "MegaDB 5.0 Migration Guide (v1.3, Updated February 2024). CRITICAL: Direct upgrades from versions earlier than 4.2 are NOT supported. Customers on 4.0 or 4.1 must first upgrade to 4.2.x before migrating to 5.0. The migration process: (1) Run the pre-migration compatibility checker: megadb-migrate --check, (2) Create a full backup using megadb-backup --full, (3) Run the schema migration: megadb-migrate --schema-only, (4) Run the data migration: megadb-migrate --data, (5) Verify integrity with: megadb-verify --post-migration."
+      - "Known issues: The migration process requires approximately 2x the current database size in free disk space. Estimated migration time is 1 hour per 100 GB of data. Custom stored procedures using the deprecated v4 API must be manually rewritten using the v5 API — there is no automatic conversion. Foreign key constraints are temporarily disabled during data migration and re-validated afterward. Roll-back is possible within 72 hours using the pre-migration backup."
+    ground_truth_answer: "To migrate from MegaDB 4.x to 5.0: first upgrade to 4.2.x if on 4.0/4.1, then run the compatibility checker, create a full backup, migrate schema, migrate data, and verify integrity. Requires 2x disk space, ~1hr per 100GB. Custom stored procedures must be manually rewritten. Roll-back is possible within 72 hours."
+    scoring: "llm_judge"
+    difficulty: "hard"
+    tags: ["faithfulness", "database", "migration"]
+
+  - id: "rag_faith_008"
+    type: "rag_task"
+    prompt: "What were the clinical outcomes of the Phase III trial for drug AZ-4891?"
+    ground_truth_contexts:
+      - "Phase III Clinical Trial Results — AZ-4891 for Moderate-to-Severe Rheumatoid Arthritis (Trial ID: NCT-0498231). Study enrolled 1,847 patients across 92 sites in 14 countries. Treatment arm (n=924) received 200mg AZ-4891 subcutaneous injection biweekly; control arm (n=923) received placebo. Primary endpoint: ACR50 response at Week 24. Results: 58.3% of AZ-4891 patients achieved ACR50 vs. 26.7% for placebo (p < 0.0001)."
+      - "Secondary endpoints: ACR70 at Week 24 was 34.1% vs. 12.4% (p < 0.0001). DAS28-CRP remission (< 2.6) was achieved by 28.9% vs. 9.2%. Safety profile: Serious adverse events occurred in 8.2% of the treatment group vs. 6.1% of placebo. Most common adverse events: upper respiratory tract infections (14.3%), injection site reactions (11.8%), and headache (9.1%). Two deaths occurred in the treatment arm (one cardiac event, one infection), both assessed as unrelated to study drug by the independent safety monitoring board."
+    ground_truth_answer: "The Phase III trial of AZ-4891 for rheumatoid arthritis (1,847 patients) showed 58.3% ACR50 response vs 26.7% placebo at Week 24 (p<0.0001). ACR70 was 34.1% vs 12.4%. Serious adverse events were 8.2% vs 6.1%. Two deaths occurred in the treatment arm but were assessed as unrelated to the drug."
+    scoring: "llm_judge"
+    difficulty: "hard"
+    tags: ["faithfulness", "clinical-trial", "pharmacology"]
+
+  - id: "rag_faith_009"
+    type: "rag_task"
+    prompt: "What are the zoning restrictions for residential construction in District 7?"
+    ground_truth_contexts:
+      - "City Planning Code, Chapter 12 — District 7 Residential Zoning (Amended October 2023). Maximum building height: 35 feet or 3 stories, whichever is less. Minimum lot size: 5,000 square feet. Front setback: 20 feet minimum. Side setback: 5 feet minimum (10 feet on corner lots). Rear setback: 15 feet minimum. Maximum lot coverage: 45%. Floor Area Ratio (FAR): 0.6 maximum."
+      - "Additional restrictions: All new residential construction must include a minimum of 2 off-street parking spaces per dwelling unit. Accessory Dwelling Units (ADUs) are permitted as of the 2023 amendment, provided they do not exceed 800 square feet and maintain a 4-foot setback from property lines. Short-term rental use (less than 30 consecutive days) is prohibited in District 7. Historic overlay zones within District 7 require additional design review by the Architectural Review Board."
+    ground_truth_answer: "District 7 residential zoning allows maximum 35 feet/3 stories, minimum 5,000 sq ft lots, with setbacks of 20ft (front), 5ft (sides), 15ft (rear). Maximum lot coverage is 45% with 0.6 FAR. Two parking spaces per unit are required. ADUs up to 800 sq ft are permitted. Short-term rentals are prohibited."
+    scoring: "llm_judge"
+    difficulty: "medium"
+    tags: ["faithfulness", "zoning", "regulatory"]
+
+  - id: "rag_faith_010"
+    type: "rag_task"
+    prompt: "What programming languages and frameworks does NovaTech use for their backend services?"
+    ground_truth_contexts:
+      - "NovaTech Engineering Blog — 'Our Technology Stack in 2024' (Published January 15, 2024). Our backend services are primarily built with Go (v1.21) for high-performance microservices and Python 3.11 with FastAPI for our API gateway and data processing pipelines. We use gRPC for inter-service communication and REST (OpenAPI 3.0) for external APIs. Our primary database is PostgreSQL 16 with read replicas, supplemented by Redis 7 for caching and Apache Kafka 3.6 for event streaming."
+      - "For deployment, we run Kubernetes (v1.28) on AWS EKS with Istio service mesh. CI/CD is handled by GitHub Actions with ArgoCD for GitOps-based deployments. Observability stack includes Prometheus, Grafana, and Jaeger for distributed tracing. We migrated from our legacy Java Spring Boot services throughout 2023 — as of January 2024, only our payment processing service still runs on Java 17 with Spring Boot 3.1, scheduled for Go migration in Q2 2024."
+    ground_truth_answer: "NovaTech uses Go (v1.21) for high-performance microservices and Python 3.11 with FastAPI for API gateway and data pipelines, with gRPC internally and REST externally. PostgreSQL 16 is the primary database, with Redis for caching and Kafka for streaming. A legacy payment service still runs Java 17 with Spring Boot 3.1, scheduled for migration to Go in Q2 2024."
+    scoring: "llm_judge"
+    difficulty: "easy"
+    tags: ["faithfulness", "technology", "engineering"]

@@ -1,0 +1,57 @@
+# ============================================================
+# AI Eval Harness — Docker Compose Configuration
+# ============================================================
+# Usage:
+#   docker compose up -d          Start in background
+#   docker compose logs -f        Follow logs
+#   docker compose down            Stop and remove
+#   docker compose up --build      Rebuild and start
+# ============================================================
+
+services:
+  evalharness:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: evalharness
+    restart: unless-stopped
+    ports:
+      - "${EVAL_HARNESS_PORT:-8000}:8000"
+    volumes:
+      # Persist SQLite database across container restarts
+      - evalharness_data:/app/data
+      # Mount benchmarks for live editing (development)
+      - ./benchmarks:/app/benchmarks:ro
+    environment:
+      - EVAL_HARNESS_ENV=${EVAL_HARNESS_ENV:-production}
+      - EVAL_HARNESS_DB_PATH=/app/data/evalharness.db
+      - EVAL_HARNESS_LOG_LEVEL=${EVAL_HARNESS_LOG_LEVEL:-info}
+      - EVAL_HARNESS_API_KEY=${EVAL_HARNESS_API_KEY:-}
+      - EVAL_HARNESS_CORS_ORIGINS=${EVAL_HARNESS_CORS_ORIGINS:-*}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - EVAL_HARNESS_MAX_WORKERS=${EVAL_HARNESS_MAX_WORKERS:-4}
+      - EVAL_HARNESS_RATE_LIMIT=${EVAL_HARNESS_RATE_LIMIT:-100}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  evalharness_data:
+    driver: local

@@ -1,0 +1,110 @@
+name: "RAG Retrieval Quality"
+description: "Tests the quality of document retrieval in RAG pipelines. Each task provides specific ground-truth contexts that a retriever should find, with varying levels of specificity and domain terminology to challenge embedding-based retrieval."
+category: "rag"
+version: "1.0"
+
+tasks:
+  - id: "rag_ret_001"
+    type: "rag_task"
+    prompt: "What is the half-life of Ibuprofen in adults?"
+    ground_truth_contexts:
+      - "Ibuprofen Pharmacokinetics: Ibuprofen is rapidly absorbed after oral administration with peak plasma concentrations reached within 1-2 hours. The plasma half-life is approximately 2 hours (range: 1.8 to 3.5 hours) in healthy adults. Protein binding is approximately 99%. Ibuprofen is extensively metabolized in the liver via CYP2C9, and metabolites are excreted primarily by the kidneys. Less than 1% of the administered dose is excreted unchanged in urine."
+    ground_truth_answer: "The half-life of Ibuprofen in adults is approximately 2 hours, with a range of 1.8 to 3.5 hours."
+    scoring: "exact_match"
+    difficulty: "easy"
+    tags: ["retrieval", "pharmacology", "specific-fact"]
+
+  - id: "rag_ret_002"
+    type: "rag_task"
+    prompt: "What are the specific hardware requirements for running MegaDB 5.0 in a production environment?"
+    ground_truth_contexts:
+      - "MegaDB 5.0 System Requirements — Production Deployment. Minimum hardware: CPU: 8 cores (x86_64 or ARM64), 3.0 GHz or higher. RAM: 32 GB (64 GB recommended for databases > 500 GB). Storage: NVMe SSD with minimum 4,000 IOPS read and 2,000 IOPS write. Network: 10 Gbps Ethernet for cluster configurations. Operating System: Ubuntu 22.04 LTS, RHEL 9, or Amazon Linux 2023. The database engine requires AVX2 instruction set support. For high-availability clusters, a minimum of 3 nodes is required with dedicated 25 Gbps interconnect."
+    ground_truth_answer: "MegaDB 5.0 requires minimum 8 CPU cores at 3.0GHz (with AVX2), 32GB RAM (64GB recommended for >500GB databases), NVMe SSD with 4000/2000 IOPS read/write, 10Gbps Ethernet, and runs on Ubuntu 22.04, RHEL 9, or Amazon Linux 2023."
+    scoring: "exact_match"
+    difficulty: "medium"
+    tags: ["retrieval", "system-requirements", "database"]
+
+  - id: "rag_ret_003"
+    type: "rag_task"
+    prompt: "What were the Q2 2024 revenue figures for Vertex Analytics' cloud division?"
+    ground_truth_contexts:
+      - "Vertex Analytics Q2 2024 Earnings Report (Filed August 1, 2024). Cloud Services Division: Revenue of $3.42 billion, up 18.7% year-over-year from $2.88 billion in Q2 2023. Subscription revenue accounted for $2.91 billion (85% of cloud revenue), with professional services contributing $510 million. Cloud gross margin expanded to 67.3% from 63.1% in the prior year period. The division added 847 new enterprise customers during the quarter, bringing total enterprise cloud customers to 14,200."
+      - "Vertex Analytics Consolidated Results: Total company revenue was $8.74 billion for Q2 2024. Cloud Services represented 39.1% of total revenue, up from 34.2% in Q2 2023, reflecting the company's ongoing shift from on-premise to cloud delivery."
+    ground_truth_answer: "Vertex Analytics' cloud division generated $3.42 billion in Q2 2024 revenue, up 18.7% year-over-year, with subscription revenue of $2.91 billion (85%) and professional services of $510 million. Cloud gross margin was 67.3%."
+    scoring: "exact_match"
+    difficulty: "medium"
+    tags: ["retrieval", "finance", "earnings"]
+
+  - id: "rag_ret_004"
+    type: "rag_task"
+    prompt: "Describe the error handling behavior of the StreamProcessor.process_batch() method when encountering malformed records."
+    ground_truth_contexts:
+      - "StreamProcessor API Reference (v3.2). Class: StreamProcessor. Method: process_batch(records: List[Record], strict_mode: bool = False) -> BatchResult. When strict_mode=False (default): Malformed records are logged at WARN level and added to BatchResult.skipped_records with a SkipReason.MALFORMED_INPUT code. Processing continues with remaining records. The method returns a partial BatchResult containing successfully processed records. When strict_mode=True: The first malformed record raises a MalformedRecordError with the record index and a diagnostic message. No records after the malformed one are processed. Already-processed records are committed unless the caller wraps the call in a transaction context."
+    ground_truth_answer: "In default mode (strict_mode=False), process_batch() logs malformed records as warnings, skips them with MALFORMED_INPUT code, and continues processing remaining records. In strict_mode=True, the first malformed record raises a MalformedRecordError, halting processing of subsequent records while already-processed records are committed."
+    scoring: "exact_match"
+    difficulty: "hard"
+    tags: ["retrieval", "api-docs", "error-handling"]
+
+  - id: "rag_ret_005"
+    type: "rag_task"
+    prompt: "What is the procedure for employee termination due to performance issues at GlobalCorp?"
+    ground_truth_contexts:
+      - "GlobalCorp HR Policy Manual, Section 5.4 — Involuntary Termination for Performance (Revised March 2024). The progressive discipline process must be followed: (1) Verbal Warning: Documented conversation with employee, specific performance gaps identified, 30-day improvement plan created. (2) Written Warning: Formal letter if improvement not achieved, 60-day Performance Improvement Plan (PIP) with measurable goals. (3) Final Written Warning: If PIP objectives not met, a final warning with a 30-day remediation period. (4) Termination: If no improvement after final warning, termination may proceed with HR Director and Legal approval."
+      - "Required documentation at each stage: signed acknowledgment from employee, specific metrics demonstrating underperformance relative to role expectations, records of support provided (training, mentorship, workload adjustments). Minimum total process duration: 120 days from verbal warning to termination. The employee may appeal the termination decision to the Employee Relations Committee within 10 business days. All terminations must include an exit interview conducted by a neutral HR representative."
+    ground_truth_answer: "GlobalCorp requires a progressive discipline process: verbal warning with 30-day improvement plan, written warning with 60-day PIP, final written warning with 30-day remediation, then termination with HR Director and Legal approval. The minimum process takes 120 days with documented metrics at each stage. Employees can appeal within 10 business days."
+    scoring: "exact_match"
+    difficulty: "medium"
+    tags: ["retrieval", "hr-policy", "termination"]
+
+  - id: "rag_ret_006"
+    type: "rag_task"
+    prompt: "What are the specific SLA guarantees for the Platinum tier of CloudNexus hosting?"
+    ground_truth_contexts:
+      - "CloudNexus Service Level Agreement — Platinum Tier (Effective July 1, 2024). Uptime Guarantee: 99.99% monthly uptime (maximum 4.32 minutes downtime per month). Response Time SLAs: Critical (P1) issues: 15-minute response, 1-hour resolution target. High (P2) issues: 30-minute response, 4-hour resolution target. Medium (P3) issues: 2-hour response, 1 business day resolution target. Support Channels: 24/7/365 phone, chat, and email support with dedicated Technical Account Manager."
+      - "SLA Credit Schedule: 99.9%-99.99% uptime: 10% service credit. 99.0%-99.9% uptime: 25% service credit. Below 99.0% uptime: 50% service credit. Credits are applied automatically and do not require a claim. Exclusions: Scheduled maintenance windows (communicated 72 hours in advance), force majeure events, and customer-caused outages. DDoS protection with up to 10 Tbps mitigation is included at no additional cost."
+    ground_truth_answer: "CloudNexus Platinum tier guarantees 99.99% uptime (4.32 min max downtime/month) with 15-min P1 response and 1-hour resolution target. Service credits range from 10% (99.9-99.99%) to 50% (below 99%), applied automatically. Includes 24/7/365 support with a dedicated TAM and 10 Tbps DDoS protection."
+    scoring: "exact_match"
+    difficulty: "medium"
+    tags: ["retrieval", "sla", "cloud-hosting"]
+
+  - id: "rag_ret_007"
+    type: "rag_task"
+    prompt: "How does the Kalman filter handle measurement noise in the context of autonomous vehicle localization?"
+    ground_truth_contexts:
+      - "Autonomous Vehicle Localization — Chapter 4: Sensor Fusion with Kalman Filters. The Extended Kalman Filter (EKF) is the standard approach for fusing GPS, IMU, and LiDAR odometry measurements. The measurement noise covariance matrix R is typically initialized based on sensor specifications: GPS position noise σ_gps ≈ 1.5m (CEP95), IMU gyroscope noise σ_gyro ≈ 0.01 °/s, LiDAR scan matching noise σ_lidar ≈ 0.05m. The Kalman gain K dynamically weights sensor inputs — when measurement noise is high relative to process noise, the filter trusts the predicted state more than the measurement."
+      - "Adaptive noise estimation: In practice, static R values are insufficient due to environmental factors (GPS multipath in urban canyons, IMU drift during extended operation). Modern implementations use Innovation-Based Adaptive Estimation (IAE), which adjusts R in real-time by monitoring the innovation sequence (difference between predicted and actual measurements). If innovations consistently exceed expected bounds, R is scaled up, reducing the filter's reliance on that sensor. This enables graceful degradation when individual sensors experience transient performance issues."
+    ground_truth_answer: "The EKF handles measurement noise via the covariance matrix R (initialized from sensor specs: GPS ~1.5m, IMU gyro ~0.01°/s, LiDAR ~0.05m) and Kalman gain K, which dynamically weights predictions vs measurements based on relative noise levels. Modern systems use Innovation-Based Adaptive Estimation to adjust R in real-time, scaling noise up when sensor innovations exceed expected bounds."
+    scoring: "exact_match"
+    difficulty: "hard"
+    tags: ["retrieval", "robotics", "signal-processing"]
+
+  - id: "rag_ret_008"
+    type: "rag_task"
+    prompt: "What are the tax implications of converting a Traditional IRA to a Roth IRA in 2024?"
+    ground_truth_contexts:
+      - "IRS Publication 590-A (2024 Edition) — Roth IRA Conversions. A conversion from a Traditional IRA to a Roth IRA is a taxable event. The converted amount is added to your ordinary income for the tax year in which the conversion occurs. There is no income limit for conversions (unlike direct Roth IRA contributions). The 10% early withdrawal penalty does NOT apply to converted amounts, regardless of age, provided they are designated as a conversion. However, a 5-year holding period applies to each conversion — withdrawing converted amounts within 5 years of the conversion triggers the 10% penalty if you are under 59½."
+      - "Tax planning considerations: Large conversions can push taxpayers into higher brackets — the 2024 brackets are: 10% ($0-$11,600), 12% ($11,601-$47,150), 22% ($47,151-$100,525), 24% ($100,526-$191,950), 32% ($191,951-$243,725), 35% ($243,726-$609,350), 37% (over $609,350) for single filers. Partial conversions spread across multiple years can minimize the tax impact. Converted amounts may also increase Medicare premiums through IRMAA surcharges if MAGI exceeds $103,000 (single) or $206,000 (married filing jointly)."
+    ground_truth_answer: "Converting a Traditional IRA to Roth IRA in 2024 is taxable — the converted amount is added to ordinary income with no income limit for conversions. No 10% early withdrawal penalty on conversions, but a 5-year holding period applies for those under 59½. Large conversions may push into higher tax brackets and trigger Medicare IRMAA surcharges."
+    scoring: "exact_match"
+    difficulty: "hard"
+    tags: ["retrieval", "tax", "retirement"]
+
+  - id: "rag_ret_009"
+    type: "rag_task"
+    prompt: "What security vulnerabilities were addressed in the GateKeeper Firewall v8.3.1 patch?"
+    ground_truth_contexts:
+      - "GateKeeper Firewall Security Advisory GK-SA-2024-0042 (Released April 15, 2024). Version 8.3.1 addresses four critical vulnerabilities: CVE-2024-31001 (CVSS 9.8): Remote code execution via crafted ICMP packets in the deep packet inspection module. An unauthenticated attacker on the same network segment could execute arbitrary code with root privileges. CVE-2024-31002 (CVSS 8.1): Authentication bypass in the management API when SAML SSO is configured with certain identity providers. CVE-2024-31003 (CVSS 7.5): Denial of service via memory exhaustion when processing malformed TLS 1.3 ClientHello messages at sustained rates exceeding 10,000 per second. CVE-2024-31004 (CVSS 6.5): Information disclosure in log files — cleartext passwords for LDAP integration were written to debug logs when log level was set to TRACE."
+    ground_truth_answer: "GateKeeper v8.3.1 fixed four vulnerabilities: CVE-2024-31001 (CVSS 9.8, RCE via ICMP in DPI), CVE-2024-31002 (CVSS 8.1, SAML SSO auth bypass), CVE-2024-31003 (CVSS 7.5, TLS 1.3 DoS via memory exhaustion), and CVE-2024-31004 (CVSS 6.5, LDAP password disclosure in debug logs)."
+    scoring: "exact_match"
+    difficulty: "hard"
+    tags: ["retrieval", "security", "patch-notes"]
+
+  - id: "rag_ret_010"
+    type: "rag_task"
+    prompt: "What are the nutritional requirements for hydroponic tomato cultivation during the flowering stage?"
+    ground_truth_contexts:
+      - "Hydroponic Tomato Production Guide — Chapter 6: Nutrient Management by Growth Stage. Flowering Stage (Weeks 5-8): EC target: 2.5-3.0 mS/cm. pH target: 5.8-6.2. Macro-nutrients (ppm): Nitrogen (N) 150-180, Phosphorus (P) 40-60, Potassium (K) 250-300, Calcium (Ca) 180-220, Magnesium (Mg) 50-70, Sulfur (S) 60-80. Micro-nutrients (ppm): Iron (Fe) 3-5, Manganese (Mn) 0.8-1.0, Zinc (Zn) 0.3-0.5, Boron (B) 0.3-0.5, Copper (Cu) 0.05-0.1, Molybdenum (Mo) 0.05. Note: Potassium levels should be increased by 15-20% compared to vegetative stage to support fruit set. Calcium deficiency during flowering leads to blossom end rot."
+    ground_truth_answer: "During flowering (weeks 5-8), hydroponic tomatoes need EC 2.5-3.0 mS/cm, pH 5.8-6.2, with key nutrients: N 150-180ppm, P 40-60ppm, K 250-300ppm (15-20% higher than vegetative), Ca 180-220ppm (critical to prevent blossom end rot), and Mg 50-70ppm, plus standard micronutrients."
+    scoring: "exact_match"
+    difficulty: "easy"
+    tags: ["retrieval", "agriculture", "hydroponics"]

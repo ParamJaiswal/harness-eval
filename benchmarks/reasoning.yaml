@@ -1,0 +1,85 @@
+name: "Logical Reasoning"
+description: "Tests logical reasoning, mathematical problem-solving, pattern recognition, and deductive/inductive inference capabilities."
+category: "llm"
+version: "1.0"
+
+tasks:
+  - id: "reason_logic_001"
+    type: "llm_task"
+    prompt: "If all roses are flowers and some flowers fade quickly, can we conclude that all roses fade quickly? Answer with 'Yes' or 'No' and a one-sentence explanation."
+    expected_output: "No"
+    scoring: "contains"
+    difficulty: "easy"
+    tags: ["logic", "syllogism", "deductive-reasoning"]
+
+  - id: "reason_logic_002"
+    type: "llm_task"
+    prompt: "Three boxes are labeled 'Apples', 'Oranges', and 'Mixed'. Each label is WRONG. You pick one fruit from the box labeled 'Mixed' and it's an apple. What does the box labeled 'Oranges' actually contain?"
+    expected_output: "Mixed"
+    scoring: "contains"
+    difficulty: "hard"
+    tags: ["logic", "puzzle", "deductive-reasoning"]
+
+  - id: "reason_math_001"
+    type: "llm_task"
+    prompt: "A train leaves Station A at 9:00 AM traveling at 60 mph. Another train leaves Station B, 180 miles away, at 10:00 AM traveling toward Station A at 90 mph. At what time do the trains meet? Provide the time in HH:MM AM/PM format."
+    expected_output: "10:48 AM"
+    scoring: "contains"
+    difficulty: "hard"
+    tags: ["math", "word-problem", "algebra"]
+
+  - id: "reason_math_002"
+    type: "llm_task"
+    prompt: "What is the sum of the first 100 positive integers?"
+    expected_output: "5050"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["math", "arithmetic", "gauss"]
+
+  - id: "reason_pattern_001"
+    type: "llm_task"
+    prompt: "What is the next number in the sequence: 2, 6, 12, 20, 30, ?"
+    expected_output: "42"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["pattern-recognition", "sequences"]
+
+  - id: "reason_pattern_002"
+    type: "llm_task"
+    prompt: "What is the next number in the Fibonacci-like sequence: 1, 1, 2, 3, 5, 8, 13, 21, ?"
+    expected_output: "34"
+    scoring: "exact_match"
+    difficulty: "easy"
+    tags: ["pattern-recognition", "fibonacci"]
+
+  - id: "reason_deductive_001"
+    type: "llm_task"
+    prompt: "Five people — Alice, Bob, Carol, Dave, and Eve — sit in a row. Alice is not next to Bob. Carol sits in the middle. Dave is at one end. Eve is next to Carol. Who sits at the other end from Dave? List the only person who MUST be at the other end."
+    expected_output: "Bob"
+    scoring: "contains"
+    difficulty: "hard"
+    tags: ["logic", "constraint-satisfaction", "deductive-reasoning"]
+
+  - id: "reason_probability_001"
+    type: "llm_task"
+    prompt: "You flip a fair coin 3 times. What is the probability of getting exactly 2 heads? Express your answer as a simplified fraction."
+    expected_output: "3/8"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["math", "probability", "combinatorics"]
+
+  - id: "reason_inductive_001"
+    type: "llm_task"
+    prompt: "Given that f(1)=3, f(2)=5, f(3)=7, f(4)=9, what is f(100)?"
+    expected_output: "201"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["math", "inductive-reasoning", "functions"]
+
+  - id: "reason_spatial_001"
+    type: "llm_task"
+    prompt: "A cube is painted red on all six faces, then cut into 27 equal smaller cubes (3x3x3). How many of the smaller cubes have exactly two faces painted red?"
+    expected_output: "12"
+    scoring: "contains"
+    difficulty: "hard"
+    tags: ["spatial-reasoning", "geometry", "visualization"]

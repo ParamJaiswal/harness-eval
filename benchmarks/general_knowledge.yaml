@@ -1,0 +1,85 @@
+name: "General Knowledge"
+description: "Tests factual knowledge across geography, science, history, mathematics, and language domains. Evaluates an LLM's ability to recall and correctly state well-established facts."
+category: "llm"
+version: "1.0"
+
+tasks:
+  - id: "gk_geography_001"
+    type: "llm_task"
+    prompt: "What is the capital of France?"
+    expected_output: "Paris"
+    scoring: "exact_match"
+    difficulty: "easy"
+    tags: ["geography", "europe", "capitals"]
+
+  - id: "gk_geography_002"
+    type: "llm_task"
+    prompt: "Which country has the longest coastline in the world?"
+    expected_output: "Canada"
+    scoring: "exact_match"
+    difficulty: "medium"
+    tags: ["geography", "world-records"]
+
+  - id: "gk_science_001"
+    type: "llm_task"
+    prompt: "What is the chemical symbol for the element with atomic number 79?"
+    expected_output: "Au"
+    scoring: "exact_match"
+    difficulty: "medium"
+    tags: ["science", "chemistry", "periodic-table"]
+
+  - id: "gk_science_002"
+    type: "llm_task"
+    prompt: "What is the speed of light in a vacuum, expressed in meters per second? Provide the approximate integer value."
+    expected_output: "299792458"
+    scoring: "contains"
+    difficulty: "hard"
+    tags: ["science", "physics", "constants"]
+
+  - id: "gk_history_001"
+    type: "llm_task"
+    prompt: "What year did the Berlin Wall fall?"
+    expected_output: "1989"
+    scoring: "contains"
+    difficulty: "easy"
+    tags: ["history", "europe", "cold-war"]
+
+  - id: "gk_history_002"
+    type: "llm_task"
+    prompt: "Who was the first Emperor of the Roman Empire?"
+    expected_output: "Augustus"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["history", "ancient-rome"]
+
+  - id: "gk_math_001"
+    type: "llm_task"
+    prompt: "What is the value of Pi rounded to five decimal places?"
+    expected_output: "3.14159"
+    scoring: "contains"
+    difficulty: "easy"
+    tags: ["math", "constants"]
+
+  - id: "gk_math_002"
+    type: "llm_task"
+    prompt: "What is the only even prime number?"
+    expected_output: "2"
+    scoring: "exact_match"
+    difficulty: "easy"
+    tags: ["math", "number-theory"]
+
+  - id: "gk_language_001"
+    type: "llm_task"
+    prompt: "What is the most widely spoken native language in the world by number of native speakers as of 2024?"
+    expected_output: "Mandarin Chinese"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["language", "linguistics"]
+
+  - id: "gk_science_003"
+    type: "llm_task"
+    prompt: "In human genetics, how many pairs of chromosomes are found in a typical somatic cell?"
+    expected_output: "23"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["science", "biology", "genetics"]

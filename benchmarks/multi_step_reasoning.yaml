@@ -1,0 +1,93 @@
+name: "Multi-Step Reasoning"
+description: "Tests an agent's ability to perform multi-hop reasoning requiring chained tool calls. Tasks require 3-5 sequential tool invocations with information flowing between steps."
+category: "agent"
+version: "1.0"
+
+tasks:
+  - id: "multi_chain_001"
+    type: "agent_task"
+    prompt: "Find who wrote the novel '1984', then search for what university they attended, and finally find out in what year that university was founded."
+    expected_output: "1096"
+    scoring: "contains"
+    difficulty: "medium"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["web_search", "web_search", "web_search"]
+    max_steps: 5
+    tags: ["multi-hop", "chained-search", "literature"]
+
+  - id: "multi_chain_002"
+    type: "agent_task"
+    prompt: "Look up the tallest building in the world, find its height in meters, convert it to feet (1 meter = 3.28084 feet), then calculate how many times the Statue of Liberty (305 feet including pedestal) would need to be stacked to reach that height."
+    expected_output: "Burj Khalifa"
+    scoring: "contains"
+    difficulty: "hard"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["web_search", "calculator", "calculator"]
+    max_steps: 5
+    tags: ["multi-hop", "search-calculate", "architecture"]
+
+  - id: "multi_chain_003"
+    type: "agent_task"
+    prompt: "Find the birth year of Albert Einstein, the birth year of Isaac Newton, calculate the difference in years between their births, then determine what major historical event occurred closest to the midpoint year between their births."
+    expected_output: "midpoint"
+    scoring: "llm_judge"
+    difficulty: "hard"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["web_search", "web_search", "calculator", "web_search"]
+    max_steps: 6
+    tags: ["multi-hop", "temporal-reasoning", "history"]
+
+  - id: "multi_chain_004"
+    type: "agent_task"
+    prompt: "Query the user database to find the top 5 users by total purchase amount, then search the web for the average income in each user's listed country, and calculate the ratio of their purchases to the average income. Present results as a table."
+    expected_output: "ratio"
+    scoring: "llm_judge"
+    difficulty: "hard"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["database_query", "web_search", "calculator"]
+    max_steps: 8
+    tags: ["multi-hop", "database-web", "analytics"]
+
+  - id: "multi_chain_005"
+    type: "agent_task"
+    prompt: "Read the configuration file at 'config/settings.json', extract the API endpoint URL listed there, then search the web for the API's documentation and summarize its rate limits."
+    expected_output: "rate limit"
+    scoring: "llm_judge"
+    difficulty: "medium"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["file_reader", "web_search", "web_search"]
+    max_steps: 5
+    tags: ["multi-hop", "file-web", "api"]
+
+  - id: "multi_chain_006"
+    type: "agent_task"
+    prompt: "Find the three most populated countries in Africa, look up their GDP per capita, then write a Python script to create a bar chart visualization comparing them and save it as 'africa_gdp.png'."
+    expected_output: "africa_gdp.png"
+    scoring: "contains"
+    difficulty: "hard"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["web_search", "web_search", "code_executor"]
+    max_steps: 6
+    tags: ["multi-hop", "search-code", "visualization"]
+
+  - id: "multi_chain_007"
+    type: "agent_task"
+    prompt: "Search for the current stock price of Apple (AAPL), calculate its price-to-earnings ratio using the latest reported EPS, and compare it to the S&P 500 average P/E ratio. Is Apple overvalued or undervalued relative to the market?"
+    expected_output: "P/E"
+    scoring: "llm_judge"
+    difficulty: "hard"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["web_search", "web_search", "calculator", "web_search"]
+    max_steps: 6
+    tags: ["multi-hop", "finance", "analysis"]
+
+  - id: "multi_chain_008"
+    type: "agent_task"
+    prompt: "Find the author of 'Pride and Prejudice', determine the year the book was published, search for what other notable events happened that year, and write a brief timeline placing the book's publication in historical context."
+    expected_output: "1813"
+    scoring: "contains"
+    difficulty: "medium"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["web_search", "web_search", "web_search"]
+    max_steps: 5
+    tags: ["multi-hop", "literature", "history"]

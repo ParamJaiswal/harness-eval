@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Evaluation Harness — Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%234f8fff'/><text x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700' font-size='18'>⚡</text></svg>" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-gradient-border"></div>
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="header-logo">⚡</div>
+        <div class="header-title"><span>AI Eval</span> Harness</div>
+      </div>
+      <div class="header-actions">
+        <div class="header-status">
+          <div class="status-dot"></div>
+          <span>API Connected</span>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="App.refreshAll()" title="Refresh data">
+          ↻ Refresh
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== TAB NAVIGATION ===== -->
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" data-tab="overview" role="tab" aria-selected="true">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label">Overview</span>
+    </button>
+    <button class="tab-btn" data-tab="run-eval" role="tab" aria-selected="false">
+      <span class="tab-icon">🚀</span>
+      <span class="tab-label">Run Evaluation</span>
+    </button>
+    <button class="tab-btn" data-tab="results" role="tab" aria-selected="false">
+      <span class="tab-icon">📋</span>
+      <span class="tab-label">Results</span>
+    </button>
+    <button class="tab-btn" data-tab="compare" role="tab" aria-selected="false">
+      <span class="tab-icon">⚖️</span>
+      <span class="tab-label">Compare</span>
+    </button>
+  </nav>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- ========== OVERVIEW TAB ========== -->
+    <section id="tab-overview" class="tab-panel active" role="tabpanel">
+
+      <!-- Hero Stats -->
+      <div class="hero-stats" id="hero-stats">
+        <div class="glass-card stat-card">
+          <div class="stat-icon">🧪</div>
+          <div class="stat-value" id="stat-total-runs">—</div>
+          <div class="stat-label">Total Runs</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon">🤖</div>
+          <div class="stat-value" id="stat-models">—</div>
+          <div class="stat-label">Models Evaluated</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-value" id="stat-avg-accuracy">—</div>
+          <div class="stat-label">Avg Accuracy</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon">📝</div>
+          <div class="stat-value" id="stat-total-tasks">—</div>
+          <div class="stat-label">Total Tasks</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <button class="btn btn-primary" onclick="App.switchTab('run-eval')">
+          🚀 New Evaluation
+        </button>
+        <button class="btn btn-secondary" onclick="App.switchTab('compare')">
+          ⚖️ Compare Runs
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="App.refreshAll()">
+          ↻ Refresh Data
+        </button>
+      </div>
+
+      <!-- Recent Runs -->
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-title-gradient">Recent Evaluation Runs</span>
+        </h2>
+      </div>
+      <div class="glass-card">
+        <div class="table-container" id="runs-table-container">
+          <!-- Skeleton while loading -->
+          <div id="runs-skeleton">
+            <div class="skeleton skeleton-row" style="margin: 1rem;"></div>
+            <div class="skeleton skeleton-row" style="margin: 1rem;"></div>
+            <div class="skeleton skeleton-row" style="margin: 1rem;"></div>
+            <div class="skeleton skeleton-row" style="margin: 1rem;"></div>
+          </div>
+          <!-- Table populated by JS -->
+          <table id="runs-table" class="hidden">
+            <thead>
+              <tr>
+                <th data-sort="id">Run ID <span class="sort-indicator">↕</span></th>
+                <th data-sort="model_name">Model <span class="sort-indicator">↕</span></th>
+                <th data-sort="benchmark_name">Benchmark <span class="sort-indicator">↕</span></th>
+                <th data-sort="eval_type">Type <span class="sort-indicator">↕</span></th>
+                <th data-sort="status">Status <span class="sort-indicator">↕</span></th>
+                <th data-sort="total_score">Score <span class="sort-indicator">↕</span></th>
+                <th>Progress</th>
+                <th data-sort="created_at">Created <span class="sort-indicator">↕</span></th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="runs-tbody"></tbody>
+          </table>
+          <!-- Empty state -->
+          <div id="runs-empty" class="empty-state hidden">
+            <div class="empty-state-icon">🧪</div>
+            <div class="empty-state-title">No evaluation runs yet</div>
+            <div class="empty-state-desc">Start your first evaluation to see results appear here. It only takes a few seconds.</div>
+            <button class="btn btn-primary" onclick="App.switchTab('run-eval')">🚀 Run First Evaluation</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== RUN EVALUATION TAB ========== -->
+    <section id="tab-run-eval" class="tab-panel" role="tabpanel">
+
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-title-gradient">Launch New Evaluation</span>
+        </h2>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+
+        <!-- Left: Model Selection -->
+        <div>
+          <div class="form-group">
+            <label class="form-label">Select Model</label>
+            <select class="form-select" id="eval-model-select">
+              <option value="">Loading models…</option>
+            </select>
+          </div>
+          <div class="section-header mt-2">
+            <h3 class="section-title text-sm">Available Models</h3>
+          </div>
+          <div class="card-grid" id="model-cards-container">
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+          </div>
+        </div>
+
+        <!-- Right: Benchmark Selection -->
+        <div>
+          <div class="form-group">
+            <label class="form-label">Select Benchmark</label>
+            <select class="form-select" id="eval-benchmark-select">
+              <option value="">Loading benchmarks…</option>
+            </select>
+          </div>
+          <div class="section-header mt-2">
+            <h3 class="section-title text-sm">Available Benchmarks</h3>
+          </div>
+          <div class="card-grid" id="benchmark-cards-container">
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Eval Type (auto-detected) -->
+      <div class="form-group mt-3" id="eval-type-group" style="max-width: 400px;">
+        <label class="form-label">Evaluation Type</label>
+        <select class="form-select" id="eval-type-select">
+          <option value="llm">🧠 LLM</option>
+          <option value="agent">🤖 Agent</option>
+          <option value="rag">📚 RAG Pipeline</option>
+        </select>
+      </div>
+
+      <!-- Run Button & Progress -->
+      <div class="mt-3" style="display: flex; align-items: center; gap: 1rem;">
+        <button class="btn btn-success btn-lg" id="run-eval-btn" onclick="App.startEvaluation()">
+          ⚡ Run Evaluation
+        </button>
+        <span class="text-sm text-muted" id="eval-status-text"></span>
+      </div>
+
+      <!-- Progress bar (hidden until running) -->
+      <div class="progress-container hidden" id="eval-progress">
+        <div class="progress-label">
+          <span id="eval-progress-label">Running evaluation…</span>
+          <span id="eval-progress-pct">0%</span>
+        </div>
+        <div class="progress-bar-wrapper">
+          <div class="progress-bar-fill" id="eval-progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== RESULTS TAB ========== -->
+    <section id="tab-results" class="tab-panel" role="tabpanel">
+
+      <!-- Run selector -->
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-title-gradient">Evaluation Results</span>
+        </h2>
+        <div class="flex items-center gap-1">
+          <select class="form-select" id="results-run-select" style="width: 320px;" onchange="App.loadRunDetail(this.value)">
+            <option value="">Select a run to view results…</option>
+          </select>
+          <button class="btn btn-sm btn-secondary" id="export-btn" onclick="App.exportRun()" disabled>
+            📥 Export
+          </button>
+        </div>
+      </div>
+
+      <!-- No run selected -->
+      <div id="results-empty" class="glass-card">
+        <div class="empty-state">
+          <div class="empty-state-icon">📋</div>
+          <div class="empty-state-title">Select an evaluation run</div>
+          <div class="empty-state-desc">Choose a completed evaluation run from the dropdown above to view detailed results, metrics, and analysis.</div>
+        </div>
+      </div>
+
+      <!-- Results detail (hidden until run selected) -->
+      <div id="results-detail" class="hidden">
+
+        <!-- Run info header -->
+        <div class="glass-card glass-card-padded mb-2" id="result-run-info">
+          <div class="run-detail-header">
+            <div>
+              <div class="run-detail-title" id="result-title">—</div>
+              <div class="run-detail-meta" id="result-meta"></div>
+            </div>
+            <div class="flex gap-1">
+              <span class="badge" id="result-status-badge"></span>
+              <span class="badge badge-type" id="result-type-badge"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metrics cards -->
+        <div class="metrics-grid" id="metrics-grid">
+          <div class="glass-card metric-card">
+            <div class="metric-value score-high" id="metric-accuracy">—</div>
+            <div class="metric-label">Accuracy</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-value" id="metric-latency" style="color: var(--accent-blue);">—</div>
+            <div class="metric-label">Avg Latency</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-value" id="metric-cost" style="color: var(--accent-purple);">—</div>
+            <div class="metric-label">Total Cost</div>
+          </div>
+        </div>
+
+        <!-- Inner tabs: Tasks / Charts / Trajectory / Context -->
+        <div class="inner-tabs" id="result-inner-tabs">
+          <button class="inner-tab-btn active" data-inner="tasks" onclick="App.switchInnerTab(this,'tasks')">📝 Tasks</button>
+          <button class="inner-tab-btn" data-inner="charts" onclick="App.switchInnerTab(this,'charts')">📊 Charts</button>
+          <button class="inner-tab-btn hidden" data-inner="trajectory" id="trajectory-tab-btn" onclick="App.switchInnerTab(this,'trajectory')">🛤️ Trajectory</button>
+          <button class="inner-tab-btn hidden" data-inner="context" id="context-tab-btn" onclick="App.switchInnerTab(this,'context')">📚 Context</button>
+        </div>
+
+        <!-- TASKS panel -->
+        <div class="inner-panel active" id="inner-tasks">
+          <div class="search-bar">
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input class="search-input" type="text" placeholder="Search tasks…" id="task-search" oninput="App.filterTasks(this.value)" />
+            </div>
+          </div>
+          <div class="glass-card">
+            <div class="table-container">
+              <table id="tasks-table">
+                <thead>
+                  <tr>
+                    <th style="width:28px;"></th>
+                    <th>Task ID</th>
+                    <th>Score</th>
+                    <th>Latency</th>
+                    <th>Tokens</th>
+                    <th>Method</th>
+                  </tr>
+                </thead>
+                <tbody id="tasks-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHARTS panel -->
+        <div class="inner-panel" id="inner-charts">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="glass-card chart-container">
+              <h3 class="text-sm mb-1" style="padding-left: 0.5rem; color: var(--text-secondary);">Per-Task Scores</h3>
+              <canvas id="chart-task-scores"></canvas>
+            </div>
+            <div class="glass-card chart-container">
+              <h3 class="text-sm mb-1" style="padding-left: 0.5rem; color: var(--text-secondary);">Latency Distribution</h3>
+              <canvas id="chart-latency"></canvas>
+            </div>
+            <div class="glass-card chart-container">
+              <h3 class="text-sm mb-1" style="padding-left: 0.5rem; color: var(--text-secondary);">Score Distribution</h3>
+              <canvas id="chart-score-dist"></canvas>
+            </div>
+            <div class="glass-card chart-container">
+              <h3 class="text-sm mb-1" style="padding-left: 0.5rem; color: var(--text-secondary);">Latency Percentiles</h3>
+              <canvas id="chart-latency-pct"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRAJECTORY panel (Agent runs) -->
+        <div class="inner-panel" id="inner-trajectory">
+          <div class="glass-card glass-card-padded">
+            <div class="trajectory-timeline" id="trajectory-container">
+              <div class="empty-state">
+                <div class="empty-state-icon">🛤️</div>
+                <div class="empty-state-title">No trajectory data</div>
+                <div class="empty-state-desc">Agent trajectory steps will appear here for agent-type evaluations.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTEXT panel (RAG runs) -->
+        <div class="inner-panel" id="inner-context">
+          <div class="glass-card glass-card-padded">
+            <div class="context-cards" id="context-container">
+              <div class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <div class="empty-state-title">No context data</div>
+                <div class="empty-state-desc">Retrieved passages and relevance scores will appear here for RAG evaluations.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========== COMPARE TAB ========== -->
+    <section id="tab-compare" class="tab-panel" role="tabpanel">
+
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-title-gradient">Compare Evaluation Runs</span>
+        </h2>
+      </div>
+
+      <div class="glass-card glass-card-padded mb-2">
+        <p class="text-sm text-muted mb-1">Select 2 or more completed runs to compare performance across all dimensions.</p>
+        <div class="compare-select" id="compare-chips"></div>
+        <button class="btn btn-primary mt-1" id="compare-btn" onclick="App.runComparison()" disabled>
+          ⚖️ Compare Selected Runs
+        </button>
+      </div>
+
+      <!-- Comparison results (hidden until comparison run) -->
+      <div id="compare-results" class="hidden">
+
+        <!-- Winner banner -->
+        <div class="winner-banner" id="compare-winner">
+          <div class="winner-trophy">🏆</div>
+          <div class="winner-text">
+            <h3 id="winner-name">—</h3>
+            <p id="winner-detail">—</p>
+          </div>
+        </div>
+
+        <div class="compare-grid">
+          <!-- Radar chart -->
+          <div class="glass-card chart-container">
+            <h3 class="text-sm mb-1" style="padding-left: 0.5rem; color: var(--text-secondary);">Dimension Comparison</h3>
+            <canvas id="chart-compare-radar"></canvas>
+          </div>
+          <!-- Bar chart -->
+          <div class="glass-card chart-container">
+            <h3 class="text-sm mb-1" style="padding-left: 0.5rem; color: var(--text-secondary);">Metric Breakdown</h3>
+            <canvas id="chart-compare-bar"></canvas>
+          </div>
+        </div>
+
+        <!-- Detailed metrics table -->
+        <div class="glass-card mt-2">
+          <div class="table-container">
+            <table id="compare-table">
+              <thead>
+                <tr id="compare-table-header"></tr>
+              </thead>
+              <tbody id="compare-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state for comparison -->
+      <div id="compare-empty" class="glass-card">
+        <div class="empty-state">
+          <div class="empty-state-icon">⚖️</div>
+          <div class="empty-state-title">Ready to compare</div>
+          <div class="empty-state-desc">Select at least 2 runs above and click "Compare" to see a detailed side-by-side analysis with radar charts and winner summary.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+<!-- SVG defs for gauge gradient -->
+<svg style="position: absolute; width: 0; height: 0;">
+  <defs>
+    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4f8fff" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="/dashboard/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+name: "Code Generation"
+description: "Tests code generation ability including Python function writing, algorithm implementation, bug fixing, and code comprehension."
+category: "llm"
+version: "1.0"
+
+tasks:
+  - id: "code_func_001"
+    type: "llm_task"
+    prompt: "Write a Python function called `is_prime` that takes an integer n and returns True if n is prime, False otherwise. Handle edge cases for n <= 1."
+    expected_output: "def is_prime"
+    scoring: "contains"
+    difficulty: "easy"
+    tags: ["python", "functions", "math"]
+
+  - id: "code_func_002"
+    type: "llm_task"
+    prompt: "Write a Python function called `flatten` that takes an arbitrarily nested list and returns a single flat list. For example, flatten([1, [2, [3, 4], 5], 6]) should return [1, 2, 3, 4, 5, 6]."
+    expected_output: "def flatten"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["python", "recursion", "data-structures"]
+
+  - id: "code_algo_001"
+    type: "llm_task"
+    prompt: "Implement a Python function `binary_search(arr, target)` that returns the index of `target` in a sorted array `arr`, or -1 if not found. Do not use any built-in search functions."
+    expected_output: "def binary_search"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["python", "algorithms", "search"]
+
+  - id: "code_algo_002"
+    type: "llm_task"
+    prompt: "Write a Python function `merge_sort(arr)` that implements the merge sort algorithm and returns the sorted array. Include the merge helper function."
+    expected_output: "def merge_sort"
+    scoring: "contains"
+    difficulty: "hard"
+    tags: ["python", "algorithms", "sorting"]
+
+  - id: "code_debug_001"
+    type: "llm_task"
+    prompt: "The following Python function is supposed to reverse a string but has a bug. Find and fix it:\n\n```python\ndef reverse_string(s):\n    result = ''\n    for i in range(len(s), 0, -1):\n        result += s[i]\n    return result\n```\n\nProvide the corrected function."
+    expected_output: "s[i-1]"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["python", "debugging", "off-by-one"]
+
+  - id: "code_debug_002"
+    type: "llm_task"
+    prompt: "This Python function is meant to compute the factorial of n but has a logic error causing infinite recursion for valid inputs. Fix it:\n\n```python\ndef factorial(n):\n    if n == 1:\n        return 1\n    return n * factorial(n - 1)\n```\n\nWhat input causes the problem and how do you fix it? Provide the corrected function."
+    expected_output: "n == 0"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["python", "debugging", "recursion"]
+
+  - id: "code_ds_001"
+    type: "llm_task"
+    prompt: "Write a Python class `Stack` that implements a stack data structure with methods: `push(item)`, `pop()`, `peek()`, `is_empty()`, and `size()`. The `pop()` and `peek()` methods should raise an IndexError if the stack is empty."
+    expected_output: "class Stack"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["python", "data-structures", "oop"]
+
+  - id: "code_comprehension_001"
+    type: "llm_task"
+    prompt: "What does the following Python function return when called with mystery(5)?\n\n```python\ndef mystery(n):\n    if n <= 0:\n        return 0\n    return n + mystery(n - 2)\n```\n\nProvide only the numeric answer."
+    expected_output: "9"
+    scoring: "contains"
+    difficulty: "medium"
+    tags: ["python", "comprehension", "recursion"]
+
+  - id: "code_regex_001"
+    type: "llm_task"
+    prompt: "Write a Python function `validate_email(email)` that uses a regular expression to validate a basic email address format (user@domain.tld). It should return True for valid emails and False for invalid ones."
+    expected_output: "re.match"
+    scoring: "regex"
+    difficulty: "hard"
+    tags: ["python", "regex", "validation"]
+
+  - id: "code_algo_003"
+    type: "llm_task"
+    prompt: "Write a Python function `lcs(s1, s2)` that returns the length of the longest common subsequence of two strings s1 and s2 using dynamic programming."
+    expected_output: "def lcs"
+    scoring: "contains"
+    difficulty: "hard"
+    tags: ["python", "algorithms", "dynamic-programming"]

@@ -1,0 +1,93 @@
+name: "Error Recovery"
+description: "Tests an agent's resilience when tools fail, return unexpected results, or produce errors. Evaluates fallback strategies, graceful degradation, and adaptive problem-solving."
+category: "agent"
+version: "1.0"
+
+tasks:
+  - id: "error_search_fail_001"
+    type: "agent_task"
+    prompt: "Search for information about 'Project Xylophone-7 quantum computing initiative 2024'. If the search returns no results, explain that you couldn't find information and suggest alternative search terms the user could try."
+    expected_output: "could not find"
+    scoring: "contains"
+    difficulty: "easy"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["web_search"]
+    max_steps: 3
+    tags: ["error-recovery", "empty-results", "graceful-degradation"]
+
+  - id: "error_file_missing_001"
+    type: "agent_task"
+    prompt: "Read the file 'reports/quarterly_analysis_2025_Q7.csv' and summarize its contents. Handle the case where the file might not exist."
+    expected_output: "not found"
+    scoring: "contains"
+    difficulty: "easy"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["file_reader"]
+    max_steps: 3
+    tags: ["error-recovery", "file-not-found", "graceful-degradation"]
+
+  - id: "error_db_timeout_001"
+    type: "agent_task"
+    prompt: "Query the database for all transactions from the last 5 years with a join across the users, orders, and products tables. If the query times out or fails, suggest a more efficient approach by breaking it into smaller queries."
+    expected_output: "smaller queries"
+    scoring: "contains"
+    difficulty: "medium"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["database_query", "database_query"]
+    max_steps: 5
+    tags: ["error-recovery", "timeout", "query-optimization"]
+
+  - id: "error_code_runtime_001"
+    type: "agent_task"
+    prompt: "Execute this Python code and handle any errors:\n\n```python\nimport pandas as pd\ndf = pd.read_csv('nonexistent_data.csv')\nprint(df.describe())\n```\n\nIf the code fails, diagnose the error, fix it by creating sample data instead, and then run the analysis."
+    expected_output: "describe"
+    scoring: "contains"
+    difficulty: "medium"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["code_executor", "code_executor"]
+    max_steps: 4
+    tags: ["error-recovery", "runtime-error", "code-fix"]
+
+  - id: "error_fallback_001"
+    type: "agent_task"
+    prompt: "Get the current weather in Atlantis, Narnia. If the search fails (because these are fictional places), clearly explain that these are fictional locations and offer to look up weather for real locations instead."
+    expected_output: "fictional"
+    scoring: "contains"
+    difficulty: "easy"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["web_search"]
+    max_steps: 3
+    tags: ["error-recovery", "invalid-input", "user-guidance"]
+
+  - id: "error_partial_results_001"
+    type: "agent_task"
+    prompt: "Search for detailed technical specifications of 'QuantumWidget Pro X9000 v3.7'. If the search returns only partial or unreliable information, clearly indicate which parts of the answer are well-sourced and which are uncertain. Do not fabricate specifications."
+    expected_output: "unable to verify"
+    scoring: "contains"
+    difficulty: "hard"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["web_search", "web_search"]
+    max_steps: 4
+    tags: ["error-recovery", "partial-data", "honesty"]
+
+  - id: "error_chain_recovery_001"
+    type: "agent_task"
+    prompt: "Read the file 'config/api_keys.json' to get the API key, then use it to search for product pricing data. If the config file doesn't exist, fall back to searching the web for publicly available pricing information instead."
+    expected_output: "pricing"
+    scoring: "llm_judge"
+    difficulty: "hard"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["file_reader", "web_search"]
+    max_steps: 5
+    tags: ["error-recovery", "fallback-chain", "adaptive"]
+
+  - id: "error_calc_overflow_001"
+    type: "agent_task"
+    prompt: "Calculate 999^999 and provide the exact number of digits in the result. If the calculator tool cannot handle this computation, use code execution as a fallback to compute it."
+    expected_output: "2997"
+    scoring: "contains"
+    difficulty: "hard"
+    available_tools: ["web_search", "calculator", "code_executor", "database_query", "file_reader"]
+    expected_tools: ["calculator", "code_executor"]
+    max_steps: 4
+    tags: ["error-recovery", "tool-fallback", "large-numbers"]

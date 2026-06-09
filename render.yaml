@@ -1,0 +1,33 @@
+# ============================================================
+# AI Eval Harness — Render.com Deployment Config
+# ============================================================
+# Free deployment: https://render.com
+# Steps:
+#   1. Push this repo to GitHub
+#   2. Go to https://dashboard.render.com → New → Web Service
+#   3. Connect your GitHub repo
+#   4. Render auto-detects this file and configures everything
+# ============================================================
+
+services:
+  - type: web
+    name: ai-eval-harness
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free          # Render free tier (sleeps after 15 min idle)
+    healthCheckPath: /health
+    envVars:
+      - key: EVAL_HARNESS_ENV
+        value: production
+      - key: EVAL_HARNESS_LOG_LEVEL
+        value: INFO
+      - key: EVAL_HARNESS_DB_PATH
+        value: /tmp/evalharness.db   # ephemeral on Render free tier
+      - key: EVAL_HARNESS_CORS_ORIGINS
+        value: "*"
+      - key: OPENAI_API_KEY
+        sync: false      # Set this in Render dashboard (optional)
+      - key: ANTHROPIC_API_KEY
+        sync: false      # Set this in Render dashboard (optional)
+      - key: EVAL_HARNESS_API_KEY
+        sync: false      # Set this to secure your API (optional)
