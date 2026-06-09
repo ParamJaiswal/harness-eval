@@ -145,46 +145,160 @@
         <h2 class="section-title">
           <span class="section-title-gradient">Launch New Evaluation</span>
         </h2>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-
-        <!-- Left: Model Selection -->
-        <div>
-          <div class="form-group">
-            <label class="form-label">Select Model</label>
-            <select class="form-select" id="eval-model-select">
-              <option value="">Loading models…</option>
-            </select>
-          </div>
-          <div class="section-header mt-2">
-            <h3 class="section-title text-sm">Available Models</h3>
-          </div>
-          <div class="card-grid" id="model-cards-container">
-            <div class="skeleton skeleton-card"></div>
-            <div class="skeleton skeleton-card"></div>
-          </div>
-        </div>
-
-        <!-- Right: Benchmark Selection -->
-        <div>
-          <div class="form-group">
-            <label class="form-label">Select Benchmark</label>
-            <select class="form-select" id="eval-benchmark-select">
-              <option value="">Loading benchmarks…</option>
-            </select>
-          </div>
-          <div class="section-header mt-2">
-            <h3 class="section-title text-sm">Available Benchmarks</h3>
-          </div>
-          <div class="card-grid" id="benchmark-cards-container">
-            <div class="skeleton skeleton-card"></div>
-            <div class="skeleton skeleton-card"></div>
-          </div>
+        <!-- Mode Toggle -->
+        <div class="mode-toggle" id="eval-mode-toggle">
+          <button class="mode-btn active" id="mode-demo-btn" onclick="App.setEvalMode('demo')">
+            🧪 Built-in Demo
+          </button>
+          <button class="mode-btn" id="mode-custom-btn" onclick="App.setEvalMode('custom')">
+            🔌 Customer Endpoint
+          </button>
         </div>
       </div>
 
-      <!-- Eval Type (auto-detected) -->
+      <!-- ── DEMO MODE ─────────────────────────────────────────── -->
+      <div id="eval-mode-demo">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+          <!-- Left: Model Selection -->
+          <div>
+            <div class="form-group">
+              <label class="form-label">Select Model</label>
+              <select class="form-select" id="eval-model-select">
+                <option value="">Loading models…</option>
+              </select>
+            </div>
+            <div class="section-header mt-2">
+              <h3 class="section-title text-sm">Available Models</h3>
+            </div>
+            <div class="card-grid" id="model-cards-container">
+              <div class="skeleton skeleton-card"></div>
+              <div class="skeleton skeleton-card"></div>
+            </div>
+          </div>
+          <!-- Right: Benchmark Selection -->
+          <div>
+            <div class="form-group">
+              <label class="form-label">Select Benchmark</label>
+              <select class="form-select" id="eval-benchmark-select">
+                <option value="">Loading benchmarks…</option>
+              </select>
+            </div>
+            <div class="section-header mt-2">
+              <h3 class="section-title text-sm">Available Benchmarks</h3>
+            </div>
+            <div class="card-grid" id="benchmark-cards-container">
+              <div class="skeleton skeleton-card"></div>
+              <div class="skeleton skeleton-card"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CUSTOMER ENDPOINT MODE ─────────────────────────────── -->
+      <div id="eval-mode-custom" class="hidden">
+        <div class="glass-card glass-card-padded customer-endpoint-form">
+
+          <!-- Provider type selector with visual cards -->
+          <div class="form-group">
+            <label class="form-label">Provider Type</label>
+            <div class="provider-grid" id="provider-cards">
+              <div class="provider-card selected" data-provider="openai_compatible" onclick="App.selectProvider(this)">
+                <div class="provider-icon">🟢</div>
+                <div class="provider-name">OpenAI-Compatible</div>
+                <div class="provider-desc">OpenAI, Groq, Together, vLLM, Ollama, LM Studio</div>
+              </div>
+              <div class="provider-card" data-provider="anthropic" onclick="App.selectProvider(this)">
+                <div class="provider-icon">🔶</div>
+                <div class="provider-name">Anthropic</div>
+                <div class="provider-desc">Claude 3, Claude 3.5, Claude Haiku</div>
+              </div>
+              <div class="provider-card" data-provider="custom_llm" onclick="App.selectProvider(this)">
+                <div class="provider-icon">⚙️</div>
+                <div class="provider-name">Custom LLM</div>
+                <div class="provider-desc">Any HTTP endpoint returning {"response": "..."}</div>
+              </div>
+              <div class="provider-card" data-provider="rag_webhook" onclick="App.selectProvider(this)">
+                <div class="provider-icon">📚</div>
+                <div class="provider-name">RAG Pipeline</div>
+                <div class="provider-desc">POST query → {"answer": "...", "contexts": [...]}</div>
+              </div>
+              <div class="provider-card" data-provider="agent_webhook" onclick="App.selectProvider(this)">
+                <div class="provider-icon">🤖</div>
+                <div class="provider-name">Agent System</div>
+                <div class="provider-desc">POST task + tools → {"answer": "...", "steps": [...]}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+            <!-- Endpoint URL -->
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label" for="custom-endpoint-url">
+                Endpoint URL <span style="color:var(--accent-red);">*</span>
+              </label>
+              <input class="form-input" type="url" id="custom-endpoint-url"
+                placeholder="https://api.example.com/v1/chat/completions"
+                oninput="App.updateEndpointPlaceholder()" />
+              <div class="form-hint" id="endpoint-hint">
+                For OpenAI-compatible: base URL like <code>https://api.groq.com/v1</code> — path auto-appended
+              </div>
+            </div>
+
+            <!-- API Key -->
+            <div class="form-group">
+              <label class="form-label" for="custom-api-key">API Key / Bearer Token</label>
+              <input class="form-input" type="password" id="custom-api-key"
+                placeholder="sk-... or your-api-key" autocomplete="off" />
+              <div class="form-hint">Sent as <code>Authorization: Bearer &lt;key&gt;</code></div>
+            </div>
+
+            <!-- Model ID -->
+            <div class="form-group" id="custom-model-id-group">
+              <label class="form-label" for="custom-model-id">Model ID</label>
+              <input class="form-input" type="text" id="custom-model-id"
+                placeholder="e.g. llama-3-70b, gpt-4o, claude-3-5-sonnet-20241022" />
+              <div class="form-hint">The model identifier passed to the endpoint</div>
+            </div>
+
+            <!-- Display Name -->
+            <div class="form-group">
+              <label class="form-label" for="custom-display-name">Display Name</label>
+              <input class="form-input" type="text" id="custom-display-name"
+                placeholder="e.g. Acme LLaMA 3" />
+              <div class="form-hint">How this model appears in results</div>
+            </div>
+
+            <!-- Benchmark (for custom mode) -->
+            <div class="form-group">
+              <label class="form-label" for="custom-benchmark-select">Benchmark</label>
+              <select class="form-select" id="custom-benchmark-select">
+                <option value="">Loading benchmarks…</option>
+              </select>
+            </div>
+
+            <!-- Eval Type -->
+            <div class="form-group">
+              <label class="form-label" for="custom-eval-type-select">Evaluation Type</label>
+              <select class="form-select" id="custom-eval-type-select">
+                <option value="llm">🧠 LLM</option>
+                <option value="rag">📚 RAG Pipeline</option>
+                <option value="agent">🤖 Agent</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Quick test / connection check -->
+          <div class="endpoint-test-bar mt-2">
+            <button class="btn btn-ghost btn-sm" id="test-endpoint-btn" onclick="App.testEndpointConnection()">
+              🔗 Test Connection
+            </button>
+            <span class="text-sm text-muted" id="endpoint-test-result"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SHARED: Eval Type + Run Button ─────────────────────── -->
+      <!-- Eval Type for demo mode -->
       <div class="form-group mt-3" id="eval-type-group" style="max-width: 400px;">
         <label class="form-label">Evaluation Type</label>
         <select class="form-select" id="eval-type-select">
@@ -213,6 +327,7 @@
         </div>
       </div>
     </section>
+
 
     <!-- ========== RESULTS TAB ========== -->
     <section id="tab-results" class="tab-panel" role="tabpanel">

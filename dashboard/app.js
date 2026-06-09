@@ -1114,7 +1114,112 @@ const App = (() => {
   }
 
   // ============================================================
-  //  REFRESH & INIT
+  //  CUSTOMER ENDPOINT FUNCTIONS
+  // ============================================================
+
+  let _evalMode = 'demo'; // 'demo' | 'custom'
+
+  function setEvalMode(mode) {
+    _evalMode = mode;
+    document.getElementById('mode-demo-btn').classList.toggle('active', mode === 'demo');
+    document.getElementById('mode-custom-btn').classList.toggle('active', mode === 'custom');
+    document.getElementById('eval-mode-demo').classList.toggle('hidden', mode !== 'demo');
+    document.getElementById('eval-mode-custom').classList.toggle('hidden', mode !== 'custom');
+    document.getElementById('eval-type-group').classList.toggle('hidden', mode !== 'demo');
+
+    // Sync benchmark dropdown in custom mode
+    if (mode === 'custom') {
+      const src = document.getElementById('eval-benchmark-select');
+      const dst = document.getElementById('custom-benchmark-select');
+      if (dst) dst.innerHTML = src.innerHTML;
+    }
+  }
+
+  function selectProvider(cardEl) {
+    document.querySelectorAll('.provider-card').forEach(c => c.classList.remove('selected'));
+    cardEl.classList.add('selected');
+    updateEndpointPlaceholder();
+
+    const provider = cardEl.dataset.provider;
+    // Auto-set eval type to match provider
+    const evalTypeEl = document.getElementById('custom-eval-type-select');
+    if (provider === 'rag_webhook') evalTypeEl.value = 'rag';
+    else if (provider === 'agent_webhook') evalTypeEl.value = 'agent';
+    else evalTypeEl.value = 'llm';
+
+    // Hide model ID for RAG/agent webhooks (they don't need it)
+    const modelIdGroup = document.getElementById('custom-model-id-group');
+    if (modelIdGroup) {
+      modelIdGroup.style.display = (provider === 'rag_webhook' || provider === 'agent_webhook') ? 'none' : '';
+    }
+  }
+
+  function updateEndpointPlaceholder() {
+    const selected = document.querySelector('.provider-card.selected');
+    const provider = selected ? selected.dataset.provider : 'openai_compatible';
+    const hint = document.getElementById('endpoint-hint');
+    const urlInput = document.getElementById('custom-endpoint-url');
+
+    const hints = {
+      openai_compatible: 'Base URL like <code>https://api.groq.com/v1</code> — <code>/chat/completions</code> is auto-appended',
+      anthropic: 'Uses <code>https://api.anthropic.com/v1/messages</code> — leave blank unless using a proxy',
+      custom_llm: 'Your endpoint URL — must accept <code>{"prompt": "..."}</code> and return <code>{"response": "..."}</code>',
+      rag_webhook: 'Your RAG endpoint — accepts <code>{"query": "..."}</code>, returns <code>{"answer": "...", "contexts": [...]}</code>',
+      agent_webhook: 'Your agent endpoint — accepts <code>{"task": "...", "tools": [...]}</code>, returns <code>{"answer": "...", "steps": [...]}</code>',
+    };
+    const placeholders = {
+      openai_compatible: 'https://api.groq.com/v1',
+      anthropic: 'https://api.anthropic.com (or leave blank)',
+      custom_llm: 'https://your-api.com/v1/generate',
+      rag_webhook: 'https://your-rag-api.com/query',
+      agent_webhook: 'https://your-agent-api.com/run',
+    };
+
+    if (hint) hint.innerHTML = hints[provider] || '';
+    if (urlInput) urlInput.placeholder = placeholders[provider] || '';
+  }
+
+  async function testEndpointConnection() {
+    const url = document.getElementById('custom-endpoint-url').value.trim();
+    const resultEl = document.getElementById('endpoint-test-result');
+    const btn = document.getElementById('test-endpoint-btn');
+
+    if (!url) {
+      resultEl.textContent = '⚠️ Enter an endpoint URL first';
+      resultEl.className = 'text-sm test-pending';
+      return;
+    }
+
+    btn.disabled = true;
+    resultEl.textContent = '⏳ Testing…';
+    resultEl.className = 'text-sm test-pending';
+
+    // Try calling /health on the base domain, then fall back to a simple HEAD
+    try {
+      const baseUrl = new URL(url);
+      const healthUrl = `${baseUrl.protocol}//${baseUrl.host}/health`;
+      const r = await fetch(healthUrl, { method: 'GET', signal: AbortSignal.timeout(5000) });
+      if (r.ok) {
+        resultEl.textContent = `✅ Connected — ${baseUrl.host} responded ${r.status}`;
+        resultEl.className = 'text-sm test-ok';
+      } else {
+        resultEl.textContent = `⚠️ Host reachable (HTTP ${r.status}) — endpoint may still work`;
+        resultEl.className = 'text-sm test-pending';
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        resultEl.textContent = '❌ Connection timed out (>5s)';
+      } else {
+        resultEl.textContent = '⚠️ Could not reach host — check URL and CORS. Evaluation may still work server-side.';
+      }
+      resultEl.className = 'text-sm test-err';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ============================================================
+  //  REFRESH & INIT  (extended to support custom mode)
   // ============================================================
 
   async function refreshAll() {
@@ -1126,11 +1231,78 @@ const App = (() => {
     toast('success', 'Data refreshed');
   }
 
+  // Override startEvaluation to handle both demo and custom modes
+  const _startEvaluationDemo = startEvaluation;
+
+  async function startEvaluationAll() {
+    if (_evalMode === 'demo') {
+      await _startEvaluationDemo();
+      return;
+    }
+
+    // --- CUSTOM ENDPOINT MODE ---
+    const endpointUrl = document.getElementById('custom-endpoint-url').value.trim();
+    const apiKey = document.getElementById('custom-api-key').value.trim();
+    const modelId = document.getElementById('custom-model-id').value.trim();
+    const displayName = document.getElementById('custom-display-name').value.trim();
+    const benchmarkName = document.getElementById('custom-benchmark-select').value;
+    const evalType = document.getElementById('custom-eval-type-select').value;
+    const selectedProvider = document.querySelector('.provider-card.selected');
+    const providerType = selectedProvider ? selectedProvider.dataset.provider : 'openai_compatible';
+
+    if (!endpointUrl) {
+      toast('warning', 'Missing endpoint URL', 'Please enter your API endpoint URL.');
+      return;
+    }
+    if (!benchmarkName) {
+      toast('warning', 'Select a benchmark', 'Please choose a benchmark to run.');
+      return;
+    }
+
+    const modelName = displayName || modelId || 'custom-model';
+    const btn = document.getElementById('run-eval-btn');
+    const progress = document.getElementById('eval-progress');
+    const statusText = document.getElementById('eval-status-text');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Starting…';
+
+    try {
+      const result = await api('/api/eval/run', {
+        method: 'POST',
+        body: JSON.stringify({
+          model_name: modelName,
+          benchmark_name: benchmarkName,
+          eval_type: evalType,
+          endpoint_url: endpointUrl,
+          api_key: apiKey,
+          provider_type: providerType,
+          model_id: modelId,
+          display_name: displayName || modelId || modelName,
+        }),
+      });
+
+      toast('success', 'Evaluation started! 🚀', `Evaluating your ${providerType} endpoint — Run ID: ${shortId(result.id)}`);
+      statusText.textContent = `Run ${shortId(result.id)} in progress…`;
+      progress.classList.remove('hidden');
+      pollEvalProgress(result.id);
+    } catch (err) {
+      toast('error', 'Failed to start evaluation', err.message);
+      btn.disabled = false;
+      btn.innerHTML = '⚡ Run Evaluation';
+    }
+  }
+
   function init() {
     configureCharts();
     initTabs();
     loadRuns();
     loadModelsAndBenchmarks();
+    updateEndpointPlaceholder(); // Set initial hints
+
+    // Wire up the run button to the unified handler
+    const runBtn = document.getElementById('run-eval-btn');
+    if (runBtn) runBtn.onclick = startEvaluationAll;
   }
 
   // Boot
@@ -1144,7 +1316,7 @@ const App = (() => {
   return {
     switchTab,
     switchInnerTab,
-    startEvaluation,
+    startEvaluation: startEvaluationAll,
     loadRunDetail,
     viewRun,
     selectModelCard,
@@ -1155,5 +1327,10 @@ const App = (() => {
     toggleCompareChip,
     runComparison,
     refreshAll,
+    // Customer endpoint
+    setEvalMode,
+    selectProvider,
+    updateEndpointPlaceholder,
+    testEndpointConnection,
   };
 })();

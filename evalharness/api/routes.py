@@ -3,6 +3,13 @@
 Defines all endpoints for starting runs, polling statuses, retrieving metrics,
 comparing multiple model runs, listing available benchmarks/models/tools,
 and exporting results.
+
+Customer endpoints
+------------------
+When ``endpoint_url`` is provided in ``POST /api/eval/run``, the harness
+builds a live HTTP adapter on-the-fly (bypassing the mock registry) and stores
+it in ``_LIVE_ADAPTERS`` keyed by ``run_id``. The background task picks it up
+from there.
 """
 
 from __future__ import annotations
@@ -20,6 +27,9 @@ from sqlalchemy import select
 
 from evalharness.adapters import ADAPTER_REGISTRY
 from evalharness.adapters.base import LLMAdapter, AgentAdapter, RAGAdapter
+from evalharness.adapters.http_llm_adapter import build_llm_adapter
+from evalharness.adapters.http_rag_adapter import RAGWebhookAdapter
+from evalharness.adapters.http_agent_adapter import AgentWebhookAdapter
 from evalharness.benchmarks.loader import BenchmarkLoader
 from evalharness.config import get_settings
 from evalharness.engine.runner import EvalRunner
@@ -46,13 +56,28 @@ loader = BenchmarkLoader()
 runner = EvalRunner()
 tool_registry = create_default_tool_registry()
 
+# Temporary store for live customer adapters (keyed by run_id)
+# They live only as long as the background task needs them.
+_LIVE_ADAPTERS: dict[str, LLMAdapter | AgentAdapter | RAGAdapter] = {}
+
 
 # -- Helper functions --------------------------------------------------------
 
 
-async def _run_evaluation_background(run_id: str, model_name: str, benchmark_name: str, eval_type: str) -> None:
-    """Background task task execution."""
+async def _run_evaluation_background(
+    run_id: str,
+    model_name: str,
+    benchmark_name: str,
+    eval_type: str,
+    live_adapter: LLMAdapter | AgentAdapter | RAGAdapter | None = None,
+) -> None:
+    """Background task execution — supports both registry and live HTTP adapters."""
     try:
+        # If a live adapter was provided (customer endpoint), inject it temporarily
+        if live_adapter is not None:
+            _orig = ADAPTER_REGISTRY.get(model_name)
+            ADAPTER_REGISTRY[model_name] = live_adapter
+
         benchmark = loader.get_benchmark(benchmark_name)
         await runner.run_evaluation(run_id, model_name, benchmark, eval_type)
     except Exception as e:
@@ -65,6 +90,11 @@ async def _run_evaluation_background(run_id: str, model_name: str, benchmark_nam
                 eval_run.status = "failed"
                 eval_run.config_json = json.dumps({"error": str(e)})
                 await session.commit()
+    finally:
+        # Clean up the live adapter — remove it from the registry
+        if live_adapter is not None and ADAPTER_REGISTRY.get(model_name) is live_adapter:
+            del ADAPTER_REGISTRY[model_name]
+        _LIVE_ADAPTERS.pop(run_id, None)
 
 
 # -- Endpoints ---------------------------------------------------------------
@@ -74,14 +104,62 @@ async def _run_evaluation_background(run_id: str, model_name: str, benchmark_nam
 async def start_evaluation(payload: EvalRunCreate, background_tasks: BackgroundTasks) -> dict[str, str]:
     """Start an evaluation run as a background task.
 
-    Returns the created evaluation run ID.
+    Supports **two modes**:
+
+    1. **Mock/registry mode** (demo): ``endpoint_url`` is empty →
+       looks up ``model_name`` in the built-in adapter registry.
+
+    2. **Customer endpoint mode**: ``endpoint_url`` is provided →
+       builds a live HTTP adapter from ``provider_type``, ``api_key``,
+       and ``model_id`` and runs the evaluation against the real endpoint.
+
+    Returns the created run ID and ``"pending"`` status.
     """
-    # Verify model exists
-    if payload.model_name not in ADAPTER_REGISTRY:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Model adapter '{payload.model_name}' not found in registry.",
-        )
+    live_adapter: LLMAdapter | AgentAdapter | RAGAdapter | None = None
+
+    if payload.endpoint_url:
+        # ── Customer endpoint mode ──────────────────────────────────────
+        try:
+            pt = (payload.provider_type or "openai_compatible").lower()
+            name = payload.display_name or payload.model_name
+
+            if pt in ("rag_webhook", "rag"):
+                live_adapter = RAGWebhookAdapter(
+                    endpoint_url=payload.endpoint_url,
+                    api_key=payload.api_key,
+                    top_k=payload.top_k,
+                    extra_headers=payload.extra_headers,
+                    display_name=name,
+                )
+            elif pt in ("agent_webhook", "agent"):
+                live_adapter = AgentWebhookAdapter(
+                    endpoint_url=payload.endpoint_url,
+                    api_key=payload.api_key,
+                    extra_headers=payload.extra_headers,
+                    display_name=name,
+                )
+            else:
+                live_adapter = build_llm_adapter(
+                    provider_type=pt,
+                    endpoint_url=payload.endpoint_url,
+                    api_key=payload.api_key,
+                    model_id=payload.model_id or payload.model_name,
+                    extra_headers=payload.extra_headers,
+                    display_name=name,
+                )
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    else:
+        # ── Registry mode (mock adapters / pre-registered) ──────────────
+        if payload.model_name not in ADAPTER_REGISTRY:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Model adapter '{payload.model_name}' not found in registry. "
+                    f"To evaluate a custom endpoint, provide 'endpoint_url' in the request."
+                ),
+            )
 
     # Verify benchmark exists
     try:
@@ -93,23 +171,36 @@ async def start_evaluation(payload: EvalRunCreate, background_tasks: BackgroundT
         )
 
     # Create EvalRun in DB
+    config = {}
+    if live_adapter is not None:
+        config = {
+            "provider_type": payload.provider_type,
+            "endpoint_url": payload.endpoint_url,
+            "model_id": payload.model_id,
+        }
+
     async with async_session_maker() as session:
         eval_run = EvalRun(
-            model_name=payload.model_name,
+            model_name=payload.display_name or payload.model_name,
             benchmark_name=payload.benchmark_name,
             eval_type=payload.eval_type,
             status="pending",
+            config_json=json.dumps(config) if config else None,
         )
         session.add(eval_run)
         await session.commit()
         run_id = eval_run.id
 
+    if live_adapter is not None:
+        _LIVE_ADAPTERS[run_id] = live_adapter
+
     background_tasks.add_task(
         _run_evaluation_background,
         run_id,
-        payload.model_name,
+        payload.display_name or payload.model_name,
         payload.benchmark_name,
         payload.eval_type,
+        live_adapter,
     )
 
     return {"id": run_id, "status": "pending"}

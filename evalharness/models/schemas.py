@@ -151,13 +151,59 @@ async def init_db(engine=None) -> None:
 
 
 class EvalRunCreate(BaseModel):
-    """Request body to start a new evaluation run."""
+    """Request body to start a new evaluation run.
 
-    model_name: str = Field(..., description="Name of the model / adapter to evaluate")
-    benchmark_name: str = Field(..., description="Name of the benchmark to run against")
+    For **mock/built-in adapters** (demo):
+        Provide ``model_name`` + ``benchmark_name`` + ``eval_type``.
+
+    For **customer endpoints** (production):
+        Also provide ``endpoint_url``, ``api_key``, ``provider_type``,
+        and optionally ``model_id``. The harness builds an HTTP adapter
+        on-the-fly and evaluates the live endpoint.
+    """
+
+    # --- Core fields ---
+    model_name: str = Field(..., description="Name/label for this model (used in results)")
+    benchmark_name: str = Field(..., description="Name or filename-stem of the benchmark to run")
     eval_type: str = Field(
         default="llm",
         description="Evaluation type: 'llm', 'agent', or 'rag'",
+    )
+
+    # --- Customer endpoint fields (optional — omit to use mock adapters) ---
+    endpoint_url: str = Field(
+        default="",
+        description=(
+            "Full URL of the customer's model/RAG/agent endpoint. "
+            "When provided, the harness calls this URL instead of a mock adapter."
+        ),
+    )
+    api_key: str = Field(
+        default="",
+        description="Bearer token / API key for the customer's endpoint.",
+    )
+    provider_type: str = Field(
+        default="openai_compatible",
+        description=(
+            "Provider format: 'openai_compatible' | 'anthropic' | "
+            "'custom_llm' | 'rag_webhook' | 'agent_webhook'"
+        ),
+    )
+    model_id: str = Field(
+        default="",
+        description="Model identifier string to pass to the endpoint (e.g. 'llama-3-70b').",
+    )
+    extra_headers: dict[str, str] = Field(
+        default_factory=dict,
+        description="Additional HTTP headers to send with each request (e.g. custom auth headers).",
+    )
+    display_name: str = Field(
+        default="",
+        description="Human-readable name shown in results (defaults to model_name).",
+    )
+    top_k: int = Field(
+        default=5,
+        description="Number of contexts to retrieve (RAG only).",
     )
 
 
