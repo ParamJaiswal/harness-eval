@@ -25,6 +25,9 @@
           <div class="status-dot"></div>
           <span>API Connected</span>
         </div>
+        <button class="btn btn-sm btn-secondary" onclick="App.openSettingsModal()" title="API Settings">
+          ⚙️ Settings
+        </button>
         <button class="btn btn-sm btn-secondary" onclick="App.refreshAll()" title="Refresh data">
           ↻ Refresh
         </button>
@@ -295,6 +298,53 @@
             <span class="text-sm text-muted" id="endpoint-test-result"></span>
           </div>
         </div>
+
+        <!-- RAG Webhook Integration Guide -->
+        <div class="glass-card glass-card-padded mt-2" style="border: 1px solid rgba(79, 143, 255, 0.2); background: rgba(79, 143, 255, 0.02);">
+          <h4 class="text-sm font-semibold mb-1" style="color: var(--accent-blue);">📚 RAG Webhook Integration Guide</h4>
+          <p class="text-xs text-muted mb-2">To evaluate your RAG pipeline's retrieval and faithfulness, set <strong>Provider Type</strong> to <strong>RAG Pipeline</strong>. Your endpoint must accept and return the following JSON structure:</p>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <div class="text-xs text-muted mb-05 mono">POST Request Payload:</div>
+              <pre class="code-block" style="font-size: 10px; margin: 0; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 4px;">{
+  "query": "What are the specs of the H100 GPU?",
+  "top_k": 5
+}</pre>
+            </div>
+            <div>
+              <div class="text-xs text-muted mb-05 mono">Expected JSON Response:</div>
+              <pre class="code-block" style="font-size: 10px; margin: 0; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 4px;">{
+  "answer": "The H100 has 80GB SXM5 HBM3...",
+  "contexts": [
+    {
+      "text": "NVIDIA H100 GPU features 80GB HBM3 memory...",
+      "source": "nvidia_specs.pdf",
+      "relevance_score": 0.95
+    }
+  ]
+}</pre>
+            </div>
+          </div>
+          <p class="text-xs text-muted mt-1" style="margin-bottom: 0;">Once configured, run the evaluation against standard benchmarks (e.g. <code>rag_faithfulness</code> or <code>rag_retrieval</code>) to test your system.</p>
+        </div>
+      </div>
+
+      <!-- Custom Benchmark Builder (hidden by default) -->
+      <div class="glass-card glass-card-padded mt-3 hidden" id="custom-benchmark-builder">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+          <h3 class="section-title text-sm" style="margin: 0;"><span class="section-title-gradient">🛠️ Custom Benchmark Builder</span></h3>
+          <span class="badge badge-type" id="custom-task-count">0 Tasks</span>
+        </div>
+        <p class="text-xs text-muted mb-2">Build an in-memory test set to run immediately. These questions are passed in the API call and not saved as files on the server.</p>
+        
+        <div id="custom-tasks-list">
+          <!-- Dynamic task cards -->
+        </div>
+        
+        <button class="btn btn-secondary btn-sm mt-1" onclick="App.addCustomTask()" type="button" style="border-style: dashed; width: 100%; justify-content: center; padding: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          ➕ Add Question / Task
+        </button>
       </div>
 
       <!-- ── SHARED: Eval Type + Run Button ─────────────────────── -->
@@ -553,6 +603,44 @@
     </linearGradient>
   </defs>
 </svg>
+
+<!-- Settings Modal -->
+<div class="modal-backdrop hidden" id="settings-modal" onclick="if(event.target === this) App.closeSettingsModal()">
+  <div class="glass-card modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+      <h3 class="modal-title" style="margin: 0; font-size: 1.25rem;"><span class="section-title-gradient">⚙️ API Settings</span></h3>
+      <button class="modal-close-btn" onclick="App.closeSettingsModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.25rem;">✕</button>
+    </div>
+    <div class="modal-body" style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <p class="text-xs text-muted" style="margin: 0;">Configure custom API keys and base URLs. These are stored locally in your browser's <code>localStorage</code> and sent only to the evaluation engine API.</p>
+      
+      <div class="form-group" style="margin: 0;">
+        <label class="form-label" for="settings-openai-key">OpenAI API Key</label>
+        <input class="form-input" type="password" id="settings-openai-key" placeholder="sk-..." autocomplete="off" />
+      </div>
+      
+      <div class="form-group" style="margin: 0;">
+        <label class="form-label" for="settings-anthropic-key">Anthropic API Key</label>
+        <input class="form-input" type="password" id="settings-anthropic-key" placeholder="sk-ant-..." autocomplete="off" />
+      </div>
+      
+      <div class="form-group" style="margin: 0;">
+        <label class="form-label" for="settings-custom-key">Custom API Key</label>
+        <input class="form-input" type="password" id="settings-custom-key" placeholder="Groq/OpenRouter API key" autocomplete="off" />
+      </div>
+      
+      <div class="form-group" style="margin: 0;">
+        <label class="form-label" for="settings-custom-base-url">Custom Base URL</label>
+        <input class="form-input" type="url" id="settings-custom-base-url" placeholder="e.g. https://api.groq.com/openai/v1 or https://openrouter.ai/api/v1" />
+        <div class="form-hint">Used for custom OpenAI-compatible providers.</div>
+      </div>
+    </div>
+    <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+      <button class="btn btn-secondary" onclick="App.closeSettingsModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="App.saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
 
 <!-- Toast container -->
 <div class="toast-container" id="toast-container"></div>

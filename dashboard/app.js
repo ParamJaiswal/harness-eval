@@ -401,7 +401,8 @@ const App = (() => {
     }
 
     select.innerHTML = '<option value="">Choose a benchmark…</option>' +
-      state.benchmarks.map(b => `<option value="${esc(b.name)}">${esc(b.name)}</option>`).join('');
+      state.benchmarks.map(b => `<option value="${esc(b.name)}">${esc(b.name)}</option>`).join('') +
+      '<option value="custom">Create Custom Benchmark...</option>';
 
     container.innerHTML = state.benchmarks.map(b => `
       <div class="glass-card benchmark-card" data-benchmark="${esc(b.name)}" onclick="App.selectBenchmarkCard(this, '${esc(b.name)}')">
@@ -425,6 +426,7 @@ const App = (() => {
     document.querySelectorAll('.benchmark-card').forEach(c => c.classList.remove('selected'));
     cardEl.classList.add('selected');
     document.getElementById('eval-benchmark-select').value = benchName;
+    onBenchmarkChange(benchName);
   }
 
   async function startEvaluation() {
@@ -443,9 +445,36 @@ const App = (() => {
     btn.innerHTML = '<span class="spinner"></span> Starting…';
 
     try {
+      const openaiKey = localStorage.getItem('eval_openai_api_key') || '';
+      const anthropicKey = localStorage.getItem('eval_anthropic_api_key') || '';
+      const customKey = localStorage.getItem('eval_custom_api_key') || '';
+      const customBaseUrl = localStorage.getItem('eval_custom_base_url') || '';
+
+      const effectiveOpenaiKey = customBaseUrl ? (customKey || openaiKey) : openaiKey;
+
+      const payload = {
+        model_name: modelName,
+        benchmark_name: benchmarkName,
+        eval_type: evalType,
+        openai_api_key: effectiveOpenaiKey || undefined,
+        anthropic_api_key: anthropicKey || undefined,
+        custom_base_url: customBaseUrl || undefined,
+      };
+
+      if (benchmarkName === 'custom') {
+        const customTasks = getCustomTasks();
+        if (customTasks.length === 0) {
+          toast('warning', 'Empty Custom Benchmark', 'Please add at least one task with a prompt.');
+          btn.disabled = false;
+          btn.innerHTML = '⚡ Run Evaluation';
+          return;
+        }
+        payload.custom_tasks = customTasks;
+      }
+
       const result = await api('/api/eval/run', {
         method: 'POST',
-        body: JSON.stringify({ model_name: modelName, benchmark_name: benchmarkName, eval_type: evalType }),
+        body: JSON.stringify(payload),
       });
 
       toast('success', 'Evaluation started', `Run ID: ${shortId(result.id)}`);
@@ -1217,7 +1246,141 @@ const App = (() => {
       btn.disabled = false;
     }
   }
+  // ─── Settings Modal Functions ──────────────────────────────
+  function openSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (!modal) return;
+    document.getElementById('settings-openai-key').value = localStorage.getItem('eval_openai_api_key') || '';
+    document.getElementById('settings-anthropic-key').value = localStorage.getItem('eval_anthropic_api_key') || '';
+    document.getElementById('settings-custom-key').value = localStorage.getItem('eval_custom_api_key') || '';
+    document.getElementById('settings-custom-base-url').value = localStorage.getItem('eval_custom_base_url') || '';
+    modal.classList.remove('hidden');
+  }
 
+  function closeSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function saveSettings() {
+    const openaiKey = document.getElementById('settings-openai-key').value.trim();
+    const anthropicKey = document.getElementById('settings-anthropic-key').value.trim();
+    const customKey = document.getElementById('settings-custom-key').value.trim();
+    const customBaseUrl = document.getElementById('settings-custom-base-url').value.trim();
+    
+    localStorage.setItem('eval_openai_api_key', openaiKey);
+    localStorage.setItem('eval_anthropic_api_key', anthropicKey);
+    localStorage.setItem('eval_custom_api_key', customKey);
+    localStorage.setItem('eval_custom_base_url', customBaseUrl);
+    
+    toast('success', 'Settings Saved', 'API keys and base URL updated successfully.');
+    closeSettingsModal();
+  }
+
+  // ─── Custom Benchmark Builder Functions ────────────────────
+  let taskCounter = 0;
+
+  function onBenchmarkChange(value) {
+    const builder = document.getElementById('custom-benchmark-builder');
+    if (!builder) return;
+    
+    if (value === 'custom') {
+      builder.classList.remove('hidden');
+      const container = document.getElementById('custom-tasks-list');
+      if (container && container.children.length === 0) {
+        addCustomTask();
+      }
+    } else {
+      builder.classList.add('hidden');
+    }
+    
+    const evalSelect = document.getElementById('eval-benchmark-select');
+    const customSelect = document.getElementById('custom-benchmark-select');
+    if (evalSelect && evalSelect.value !== value) evalSelect.value = value;
+    if (customSelect && customSelect.value !== value) customSelect.value = value;
+  }
+
+  function addCustomTask() {
+    const container = document.getElementById('custom-tasks-list');
+    if (!container) return;
+    
+    taskCounter++;
+    const taskId = `task_${taskCounter}`;
+    
+    const card = document.createElement('div');
+    card.className = 'custom-task-card';
+    card.id = `custom-task-card-${taskId}`;
+    card.innerHTML = `
+      <button class="remove-task-btn" onclick="App.removeCustomTask('${taskId}')" type="button" title="Remove task">✕</button>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" style="font-size: 0.75rem;">Task ID</label>
+          <input class="form-input custom-task-id" type="text" value="${taskId}" placeholder="e.g. task_1" />
+        </div>
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" style="font-size: 0.75rem;">Scoring Method</label>
+          <select class="form-select custom-task-scoring" style="padding: 0.55rem 0.75rem; font-size: 0.85rem;">
+            <option value="exact_match">Exact Match</option>
+            <option value="contains">Contains</option>
+            <option value="fuzzy_match">Fuzzy Match</option>
+            <option value="llm_judge">LLM Judge</option>
+            <option value="regex">Regex Match</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1; margin: 0;">
+          <label class="form-label" style="font-size: 0.75rem;">Prompt / Input <span style="color:var(--accent-red);">*</span></label>
+          <textarea class="form-input custom-task-prompt" rows="2" placeholder="Enter prompt here..." style="font-family: inherit; resize: vertical; min-height: 48px;"></textarea>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1; margin: 0;">
+          <label class="form-label" style="font-size: 0.75rem;">Expected Output</label>
+          <textarea class="form-input custom-task-expected" rows="2" placeholder="Enter expected response (optional)..." style="font-family: inherit; resize: vertical; min-height: 48px;"></textarea>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+    updateCustomTaskCount();
+  }
+
+  function removeCustomTask(taskId) {
+    const card = document.getElementById(`custom-task-card-${taskId}`);
+    if (card) {
+      card.remove();
+      updateCustomTaskCount();
+    }
+  }
+
+  function updateCustomTaskCount() {
+    const container = document.getElementById('custom-tasks-list');
+    const badge = document.getElementById('custom-task-count');
+    if (container && badge) {
+      badge.textContent = `${container.children.length} Tasks`;
+    }
+  }
+
+  function getCustomTasks() {
+    const container = document.getElementById('custom-tasks-list');
+    if (!container) return [];
+    
+    const tasks = [];
+    const cards = container.getElementsByClassName('custom-task-card');
+    for (const card of cards) {
+      const id = card.querySelector('.custom-task-id').value.trim();
+      const prompt = card.querySelector('.custom-task-prompt').value.trim();
+      const expected = card.querySelector('.custom-task-expected').value.trim();
+      const scoring = card.querySelector('.custom-task-scoring').value;
+      
+      if (prompt) {
+        tasks.push({
+          id: id || `task_${tasks.length + 1}`,
+          prompt: prompt,
+          expected_output: expected,
+          scoring: scoring,
+          type: "llm_task"
+        });
+      }
+    }
+    return tasks;
+  }
   // ============================================================
   //  REFRESH & INIT  (extended to support custom mode)
   // ============================================================
@@ -1236,7 +1399,7 @@ const App = (() => {
 
   async function startEvaluationAll() {
     if (_evalMode === 'demo') {
-      await _startEvaluationDemo();
+      await startEvaluation();
       return;
     }
 
@@ -1268,18 +1431,31 @@ const App = (() => {
     btn.innerHTML = '<span class="spinner"></span> Starting…';
 
     try {
+      const payload = {
+        model_name: modelName,
+        benchmark_name: benchmarkName,
+        eval_type: evalType,
+        endpoint_url: endpointUrl,
+        api_key: apiKey,
+        provider_type: providerType,
+        model_id: modelId,
+        display_name: displayName || modelId || modelName,
+      };
+
+      if (benchmarkName === 'custom') {
+        const customTasks = getCustomTasks();
+        if (customTasks.length === 0) {
+          toast('warning', 'Empty Custom Benchmark', 'Please add at least one task with a prompt.');
+          btn.disabled = false;
+          btn.innerHTML = '⚡ Run Evaluation';
+          return;
+        }
+        payload.custom_tasks = customTasks;
+      }
+
       const result = await api('/api/eval/run', {
         method: 'POST',
-        body: JSON.stringify({
-          model_name: modelName,
-          benchmark_name: benchmarkName,
-          eval_type: evalType,
-          endpoint_url: endpointUrl,
-          api_key: apiKey,
-          provider_type: providerType,
-          model_id: modelId,
-          display_name: displayName || modelId || modelName,
-        }),
+        body: JSON.stringify(payload),
       });
 
       toast('success', 'Evaluation started! 🚀', `Evaluating your ${providerType} endpoint — Run ID: ${shortId(result.id)}`);
@@ -1303,6 +1479,12 @@ const App = (() => {
     // Wire up the run button to the unified handler
     const runBtn = document.getElementById('run-eval-btn');
     if (runBtn) runBtn.onclick = startEvaluationAll;
+
+    // Wire up benchmark change listeners to show/hide benchmark builder
+    const evalSelect = document.getElementById('eval-benchmark-select');
+    if (evalSelect) evalSelect.onchange = (e) => onBenchmarkChange(e.target.value);
+    const customSelect = document.getElementById('custom-benchmark-select');
+    if (customSelect) customSelect.onchange = (e) => onBenchmarkChange(e.target.value);
   }
 
   // Boot
@@ -1327,10 +1509,13 @@ const App = (() => {
     toggleCompareChip,
     runComparison,
     refreshAll,
-    // Customer endpoint
-    setEvalMode,
-    selectProvider,
-    updateEndpointPlaceholder,
-    testEndpointConnection,
+    // Settings modal
+    openSettingsModal,
+    closeSettingsModal,
+    saveSettings,
+    // Custom benchmark builder
+    onBenchmarkChange,
+    addCustomTask,
+    removeCustomTask,
   };
 })();

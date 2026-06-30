@@ -205,6 +205,26 @@ class EvalRunCreate(BaseModel):
         default=5,
         description="Number of contexts to retrieve (RAG only).",
     )
+    
+    # --- Custom Benchmark fields ---
+    custom_tasks: list[dict[str, Any]] | None = Field(
+        default=None,
+        description="List of custom task definitions. If provided and benchmark_name is 'custom', these tasks will be used instead of loading a benchmark from disk.",
+    )
+    
+    # --- Dynamic API Key Overrides ---
+    openai_api_key: str | None = Field(
+        default=None,
+        description="Dynamic OpenAI API key to use for real models, bypassing .env.",
+    )
+    anthropic_api_key: str | None = Field(
+        default=None,
+        description="Dynamic Anthropic API key to use for real models, bypassing .env.",
+    )
+    custom_base_url: str | None = Field(
+        default=None,
+        description="Custom base URL for OpenAI-compatible endpoints (e.g. OpenRouter, Groq).",
+    )
 
 
 class TaskResultResponse(BaseModel):

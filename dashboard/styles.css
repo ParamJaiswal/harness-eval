@@ -1544,3 +1544,78 @@ tbody td {
 
 /* Utility */
 .hidden { display: none !important; }
+
+/* ============================================================
+   SETTINGS MODAL & CUSTOM BENCHMARK BUILDER
+   ============================================================ */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 10, 15, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), var(--shadow-glow-blue);
+  animation: modalAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 1.75rem;
+}
+
+@keyframes modalAppear {
+  from { transform: scale(0.95) translateY(10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.custom-task-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.01) !important;
+  border: 1px solid var(--border-glass) !important;
+  border-radius: var(--radius-sm);
+  padding: 1.25rem;
+  margin-top: 1rem;
+  animation: cardFadeIn 0.3s ease;
+  transition: border-color var(--transition-normal);
+}
+
+.custom-task-card:hover {
+  border-color: var(--border-glass-hover) !important;
+}
+
+.custom-task-card .remove-task-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+}
+
+.custom-task-card .remove-task-btn:hover {
+  color: var(--accent-red);
+  background: var(--accent-red-dim);
+}
+
+@keyframes cardFadeIn {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+

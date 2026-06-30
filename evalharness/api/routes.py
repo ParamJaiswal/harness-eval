@@ -70,6 +70,7 @@ async def _run_evaluation_background(
     benchmark_name: str,
     eval_type: str,
     live_adapter: LLMAdapter | AgentAdapter | RAGAdapter | None = None,
+    custom_tasks: list[dict] | None = None,
 ) -> None:
     """Background task execution — supports both registry and live HTTP adapters."""
     try:
@@ -78,7 +79,28 @@ async def _run_evaluation_background(
             _orig = ADAPTER_REGISTRY.get(model_name)
             ADAPTER_REGISTRY[model_name] = live_adapter
 
-        benchmark = loader.get_benchmark(benchmark_name)
+        if benchmark_name == "custom" and custom_tasks:
+            from evalharness.benchmarks.loader import Benchmark, BenchmarkTask
+            tasks = [
+                BenchmarkTask(
+                    id=str(t.get("id", f"task_{i}")),
+                    type=str(t.get("type", "llm_task")),
+                    prompt=str(t.get("prompt", "")),
+                    expected_output=str(t.get("expected_output", "")),
+                    scoring=str(t.get("scoring", "exact_match")),
+                )
+                for i, t in enumerate(custom_tasks)
+            ]
+            benchmark = Benchmark(
+                name="custom",
+                description="Custom benchmark from UI",
+                category=eval_type,
+                version="1.0",
+                tasks=tasks,
+            )
+        else:
+            benchmark = loader.get_benchmark(benchmark_name)
+            
         await runner.run_evaluation(run_id, model_name, benchmark, eval_type)
     except Exception as e:
         logger.exception(f"Background run {run_id} failed: {e}")
@@ -152,7 +174,24 @@ async def start_evaluation(payload: EvalRunCreate, background_tasks: BackgroundT
 
     else:
         # ── Registry mode (mock adapters / pre-registered) ──────────────
-        if payload.model_name not in ADAPTER_REGISTRY:
+        if payload.openai_api_key and "mock" not in payload.model_name.lower() and ("gpt" in payload.model_name.lower() or payload.custom_base_url):
+            if payload.custom_base_url:
+                from evalharness.adapters.http_llm_adapter import OpenAICompatibleAdapter
+                live_adapter = OpenAICompatibleAdapter(
+                    endpoint_url=payload.custom_base_url,
+                    api_key=payload.openai_api_key,
+                    model_id=payload.model_name,
+                )
+            else:
+                from evalharness.adapters.openai_adapter import OpenAILLMAdapter
+                live_adapter = OpenAILLMAdapter(model=payload.model_name, api_key=payload.openai_api_key)
+        elif payload.anthropic_api_key and "mock" not in payload.model_name.lower() and ("claude" in payload.model_name.lower() or "anthropic" in payload.model_name.lower()):
+            from evalharness.adapters.http_llm_adapter import AnthropicAdapter
+            live_adapter = AnthropicAdapter(
+                api_key=payload.anthropic_api_key,
+                model_id=payload.model_name,
+            )
+        elif payload.model_name not in ADAPTER_REGISTRY:
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -163,7 +202,8 @@ async def start_evaluation(payload: EvalRunCreate, background_tasks: BackgroundT
 
     # Verify benchmark exists
     try:
-        loader.get_benchmark(payload.benchmark_name)
+        if payload.benchmark_name != "custom":
+            loader.get_benchmark(payload.benchmark_name)
     except KeyError:
         raise HTTPException(
             status_code=400,
@@ -196,11 +236,12 @@ async def start_evaluation(payload: EvalRunCreate, background_tasks: BackgroundT
 
     background_tasks.add_task(
         _run_evaluation_background,
-        run_id,
-        payload.display_name or payload.model_name,
-        payload.benchmark_name,
-        payload.eval_type,
-        live_adapter,
+        run_id=eval_run.id,
+        model_name=payload.display_name or payload.model_name,
+        benchmark_name=payload.benchmark_name,
+        eval_type=payload.eval_type,
+        live_adapter=live_adapter,
+        custom_tasks=payload.custom_tasks,
     )
 
     return {"id": run_id, "status": "pending"}
