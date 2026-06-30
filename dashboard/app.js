@@ -1509,6 +1509,11 @@ const App = (() => {
     toggleCompareChip,
     runComparison,
     refreshAll,
+    // Customer endpoint
+    setEvalMode,
+    selectProvider,
+    updateEndpointPlaceholder,
+    testEndpointConnection,
     // Settings modal
     openSettingsModal,
     closeSettingsModal,
